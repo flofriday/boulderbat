@@ -1,9 +1,12 @@
 import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from pathlib import Path
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from app.collector import collect_capacity
@@ -11,6 +14,8 @@ from app.db import get_history, get_live, init_db
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+STATIC_DIR = Path(__file__).parent.parent.parent / "frontend" / "dist"
 
 
 @asynccontextmanager
@@ -66,3 +71,14 @@ async def history(
         return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     return await get_history(to_utc(start), to_utc(end), location_id)
+
+
+if STATIC_DIR.exists():
+    app.mount("/assets", StaticFiles(directory=STATIC_DIR / "assets"), name="assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_spa(full_path: str):
+        file = STATIC_DIR / full_path
+        if file.is_file():
+            return FileResponse(file)
+        return FileResponse(STATIC_DIR / "index.html")

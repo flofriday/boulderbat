@@ -1,6 +1,6 @@
 # Boulderbat
 
-Polls [boulderbar.net](https://boulderbar.net) capacity data every 5 minutes and stores it in a local SQLite database. Exposes a small REST API to query live and historical capacity.
+Polls [boulderbar.net](https://boulderbar.net) capacity data every 5 minutes and stores it in a local SQLite database. Exposes a REST API and a React frontend to view live and historical capacity.
 
 ## Run with Docker
 
@@ -9,18 +9,35 @@ docker build -t boulderbat .
 docker run -p 8000:8000 -v boulderbat-data:/data boulderbat
 ```
 
-The `/data` volume persists the database across restarts.
+The `/data` volume persists the database across restarts. The frontend is available at `http://localhost:8000`.
 
 ## Run locally
 
-Requires [uv](https://docs.astral.sh/uv/).
+Requires [uv](https://docs.astral.sh/uv/) and [Node.js](https://nodejs.org/).
+
+**Backend:**
 
 ```bash
+cd backend
 uv sync
-uv run uvicorn app.main:app --reload
+uv run python -m uvicorn main:app --reload
 ```
 
-The server starts at `http://localhost:8000`. On startup it immediately fetches current capacity and then polls every 5 minutes.
+**Frontend (dev server with HMR):**
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend dev server proxies `/live` and `/history` to the backend at `http://localhost:8000`.
+
+To build the frontend for production (served by the backend):
+
+```bash
+cd frontend && npm run build
+```
 
 By default the database is written to `data/boulderbat.db`. Override with the `DB_PATH` environment variable.
 
@@ -59,18 +76,6 @@ curl "http://localhost:8000/history?start=2026-04-27T00:00:00Z&end=2026-04-28T00
 
 # Single location
 curl "http://localhost:8000/history?start=2026-04-27T00:00:00Z&end=2026-04-28T00:00:00Z&location_id=260"
-```
-
-```json
-[
-  {
-    "location_id": 260,
-    "title": "Linz",
-    "capacity": 42,
-    "recorded_at": "2026-04-27T08:00:00Z"
-  },
-  ...
-]
 ```
 
 ## Location IDs

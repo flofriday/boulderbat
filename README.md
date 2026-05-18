@@ -1,6 +1,7 @@
 # Boulderbat
 
-Polls [boulderbar.net](https://boulderbar.net) capacity data every 5 minutes and stores it in a local SQLite database. Exposes a REST API and a React frontend to view live and historical capacity.
+Find the best time to hang out at the gym.
+
 
 ## Run with Docker
 

@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { ExternalLink } from "lucide-react"
+import logo from "@/assets/logo.svg"
 
 function GithubIcon({ className }: { className?: string }) {
   return (
@@ -20,9 +21,12 @@ export default function App() {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-5xl px-4 py-8 space-y-6">
-        <header>
-          <h1 className="text-2xl font-bold tracking-tight">Boulderbat</h1>
-          <p className="text-sm text-muted-foreground mt-1">Live and historical capacity for Boulderbar locations</p>
+        <header className="flex items-center gap-4">
+          <img src={logo} alt="" className="h-12 w-12 rounded-lg" />
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Boulderbat</h1>
+            <p className="text-sm text-muted-foreground mt-1">Find the best time to hang out at the gym</p>
+          </div>
         </header>
 
         <nav className="flex gap-1 border-b">

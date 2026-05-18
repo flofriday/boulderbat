@@ -4,12 +4,20 @@ Polls [boulderbar.net](https://boulderbar.net) capacity data every 5 minutes and
 
 ## Run with Docker
 
+Build the image:
+
 ```bash
 docker build -t boulderbat .
-docker run -p 8000:8000 -v boulderbat-data:/data boulderbat
 ```
 
-The `/data` volume persists the database across restarts. The frontend is available at `http://localhost:8000`.
+Run the container:
+
+```bash
+docker run -p 8000:8000 -v boulderbat-data:/data  boulderbat
+```
+
+The frontend is available at `http://localhost:8000`. The named volume `boulderbat-data` persists the database across restarts.
+
 
 ## Run locally
 
@@ -20,8 +28,10 @@ Requires [uv](https://docs.astral.sh/uv/) and [Node.js](https://nodejs.org/).
 ```bash
 cd backend
 uv sync
-uv run python -m uvicorn main:app --reload
+uv run fastapi dev main.py
 ```
+
+(`fastapi dev` enables auto-reload. Use `fastapi run main.py` for the production server.)
 
 **Frontend (dev server with HMR):**
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
@@ -32,6 +32,9 @@ const LOCATION_COLORS: Record<string, string> = {
   "284": "hsl(160 60% 30%)",
 }
 
+// Polling cadence is 5 min — break the line if there's a > 15 min gap.
+const GAP_THRESHOLD_MS = 15 * 60 * 1000
+
 interface Reading {
   location_id: number
   title: string
@@ -40,8 +43,8 @@ interface Reading {
 }
 
 interface ChartPoint {
-  time: string
-  [key: string]: string | number
+  ts: number
+  [key: string]: number | null
 }
 
 function buildChartData(readings: Reading[], locationId: string): { data: ChartPoint[]; keys: string[] } {
@@ -51,17 +54,40 @@ function buildChartData(readings: Reading[], locationId: string): { data: ChartP
   for (const r of readings) {
     const label = locationId === "all" ? r.title : "Capacity"
     keySet.add(label)
-    const time = new Date(r.recorded_at).toLocaleString([], {
-      month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
-    })
-    if (!byTime[r.recorded_at]) byTime[r.recorded_at] = { time }
+    const ts = new Date(r.recorded_at).getTime()
+    if (!byTime[r.recorded_at]) byTime[r.recorded_at] = { ts }
     byTime[r.recorded_at][label] = r.capacity
   }
 
-  return {
-    data: Object.values(byTime).sort((a, b) => a.time < b.time ? -1 : 1),
-    keys: Array.from(keySet),
+  const sorted = Object.values(byTime).sort((a, b) => a.ts - b.ts)
+  const keys = Array.from(keySet)
+
+  const withGaps: ChartPoint[] = []
+  for (let i = 0; i < sorted.length; i++) {
+    withGaps.push(sorted[i])
+    const next = sorted[i + 1]
+    if (next && next.ts - sorted[i].ts > GAP_THRESHOLD_MS) {
+      const nullPoint: ChartPoint = { ts: sorted[i].ts + 1 }
+      for (const k of keys) nullPoint[k] = null
+      withGaps.push(nullPoint)
+    }
   }
+
+  return { data: withGaps, keys }
+}
+
+function formatTick(ts: number, rangeHours: number) {
+  const d = new Date(ts)
+  if (rangeHours <= 24) {
+    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })
+  }
+  return d.toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false })
+}
+
+function formatTooltipLabel(ts: string | number) {
+  return new Date(Number(ts)).toLocaleString([], {
+    month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false,
+  })
 }
 
 export function HistoryView() {
@@ -71,9 +97,10 @@ export function HistoryView() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const rangeHours = RANGES.find(r => r.value === range)!.hours
+
   useEffect(() => {
     setLoading(true)
-    const rangeHours = RANGES.find(r => r.value === range)!.hours
     const end = new Date()
     const start = new Date(end.getTime() - rangeHours * 3600_000)
     const fmt = (d: Date) => d.toISOString().replace(".000", "")
@@ -85,9 +112,9 @@ export function HistoryView() {
       .then(d => { setReadings(d); setError(null) })
       .catch(e => setError(e instanceof Error ? e.message : "Failed to fetch"))
       .finally(() => setLoading(false))
-  }, [range, locationId])
+  }, [range, locationId, rangeHours])
 
-  const { data, keys } = buildChartData(readings, locationId)
+  const { data, keys } = useMemo(() => buildChartData(readings, locationId), [readings, locationId])
 
   const chartConfig = Object.fromEntries(
     LOCATIONS.filter(l => l.id !== "all").map((l, i) => [
@@ -137,11 +164,15 @@ export function HistoryView() {
               <LineChart data={data} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis
-                  dataKey="time"
+                  dataKey="ts"
+                  type="number"
+                  scale="time"
+                  domain={["dataMin", "dataMax"]}
+                  tickFormatter={ts => formatTick(ts, rangeHours)}
                   tick={{ fontSize: 11 }}
                   tickLine={false}
                   axisLine={false}
-                  minTickGap={60}
+                  minTickGap={50}
                 />
                 <YAxis
                   domain={[0, 100]}
@@ -150,7 +181,7 @@ export function HistoryView() {
                   tickLine={false}
                   axisLine={false}
                 />
-                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartTooltip content={<ChartTooltipContent labelFormatter={formatTooltipLabel} />} />
                 {keys.map((key, i) => (
                   <Line
                     key={key}
@@ -159,7 +190,6 @@ export function HistoryView() {
                     stroke={chartConfig[key]?.color || `hsl(var(--chart-${(i % 5) + 1}))`}
                     strokeWidth={2}
                     dot={false}
-                    connectNulls
                   />
                 ))}
               </LineChart>

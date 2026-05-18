@@ -17,7 +17,7 @@ function capacityColor(pct: number) {
 }
 
 function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })
 }
 
 export function LiveView() {
@@ -53,7 +53,7 @@ export function LiveView() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {lastFetch ? <>Updated at {lastFetch.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</> : null}
+          {lastFetch ? <>Updated at {lastFetch.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}</> : null}
         </p>
         <button
           onClick={fetchLive}

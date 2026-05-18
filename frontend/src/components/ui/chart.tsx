@@ -72,17 +72,20 @@ interface TooltipPayloadItem {
 interface ChartTooltipContentProps {
   active?: boolean
   payload?: TooltipPayloadItem[]
-  label?: string
+  label?: string | number
   className?: string
+  labelFormatter?: (label: string | number) => string
 }
 
-export function ChartTooltipContent({ active, payload, label, className }: ChartTooltipContentProps) {
+export function ChartTooltipContent({ active, payload, label, className, labelFormatter }: ChartTooltipContentProps) {
   const { config } = useChart()
   if (!active || !payload?.length) return null
 
+  const formattedLabel = label !== undefined ? (labelFormatter ? labelFormatter(label) : label) : null
+
   return (
     <div className={cn("grid min-w-[8rem] gap-1.5 rounded-lg border bg-background px-2.5 py-1.5 text-xs shadow-xl", className)}>
-      {label && <div className="font-medium">{label}</div>}
+      {formattedLabel !== null && <div className="font-medium">{formattedLabel}</div>}
       <div className="grid gap-1">
         {payload.map((item, i) => {
           const key = String(item.name || item.dataKey || "value")

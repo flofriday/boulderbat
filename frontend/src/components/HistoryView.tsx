@@ -3,16 +3,17 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { cn } from "@/lib/utils"
 
-const LOCATIONS = [
-  { id: "all", label: "All locations" },
-  { id: "260", label: "Linz" },
-  { id: "261", label: "Salzburg" },
-  { id: "262", label: "Hannovergasse" },
-  { id: "263", label: "Hauptbahnhof" },
-  { id: "264", label: "Seestadt" },
-  { id: "265", label: "Wienerberg" },
-  { id: "284", label: "St. Pölten" },
+// `label` must match the `title` returned by the API — lines are keyed by title.
+const GYMS = [
+  { id: "260", label: "Linz", color: "hsl(var(--chart-1))" },
+  { id: "261", label: "Salzburg", color: "hsl(var(--chart-2))" },
+  { id: "262", label: "Hannovergasse", color: "hsl(var(--chart-3))" },
+  { id: "263", label: "Hauptbahnhof", color: "hsl(var(--chart-4))" },
+  { id: "264", label: "Seestadt", color: "hsl(var(--chart-5))" },
+  { id: "265", label: "Wienerberg", color: "hsl(221.2 83.2% 40%)" },
+  { id: "284", label: "St. Pölten", color: "hsl(160 60% 30%)" },
 ]
 
 const RANGES = [
@@ -22,15 +23,7 @@ const RANGES = [
   { value: "30d", label: "Last 30 days", hours: 24 * 30 },
 ]
 
-const LOCATION_COLORS: Record<string, string> = {
-  "260": "hsl(var(--chart-1))",
-  "261": "hsl(var(--chart-2))",
-  "262": "hsl(var(--chart-3))",
-  "263": "hsl(var(--chart-4))",
-  "264": "hsl(var(--chart-5))",
-  "265": "hsl(221.2 83.2% 40%)",
-  "284": "hsl(160 60% 30%)",
-}
+const CHART_CONFIG = Object.fromEntries(GYMS.map(g => [g.label, { label: g.label, color: g.color }]))
 
 // Polling cadence is 5 min — break the line if there's a > 15 min gap.
 const GAP_THRESHOLD_MS = 15 * 60 * 1000
@@ -47,20 +40,18 @@ interface ChartPoint {
   [key: string]: number | null
 }
 
-function buildChartData(readings: Reading[], locationId: string): { data: ChartPoint[]; keys: string[] } {
+function buildChartData(readings: Reading[], selectedIds: Set<string>): { data: ChartPoint[]; keys: string[] } {
+  const keys = GYMS.filter(g => selectedIds.has(g.id)).map(g => g.label)
   const byTime: Record<string, ChartPoint> = {}
-  const keySet = new Set<string>()
 
   for (const r of readings) {
-    const label = locationId === "all" ? r.title : "Capacity"
-    keySet.add(label)
+    if (!selectedIds.has(String(r.location_id))) continue
     const ts = new Date(r.recorded_at).getTime()
     if (!byTime[r.recorded_at]) byTime[r.recorded_at] = { ts }
-    byTime[r.recorded_at][label] = r.capacity
+    byTime[r.recorded_at][r.title] = r.capacity
   }
 
   const sorted = Object.values(byTime).sort((a, b) => a.ts - b.ts)
-  const keys = Array.from(keySet)
 
   const withGaps: ChartPoint[] = []
   for (let i = 0; i < sorted.length; i++) {
@@ -92,7 +83,7 @@ function formatTooltipLabel(ts: string | number) {
 
 export function HistoryView() {
   const [range, setRange] = useState("24h")
-  const [locationId, setLocationId] = useState("all")
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set(GYMS.map(g => g.id)))
   const [readings, setReadings] = useState<Reading[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -105,30 +96,31 @@ export function HistoryView() {
     const start = new Date(end.getTime() - rangeHours * 3600_000)
     const fmt = (d: Date) => d.toISOString().replace(".000", "")
     const params = new URLSearchParams({ start: fmt(start), end: fmt(end) })
-    if (locationId !== "all") params.set("location_id", locationId)
 
     fetch(`/history?${params}`)
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
       .then(d => { setReadings(d); setError(null) })
       .catch(e => setError(e instanceof Error ? e.message : "Failed to fetch"))
       .finally(() => setLoading(false))
-  }, [range, locationId, rangeHours])
+  }, [range, rangeHours])
 
-  const { data, keys } = useMemo(() => buildChartData(readings, locationId), [readings, locationId])
+  const { data, keys } = useMemo(() => buildChartData(readings, selectedIds), [readings, selectedIds])
 
-  const chartConfig = Object.fromEntries(
-    LOCATIONS.filter(l => l.id !== "all").map((l, i) => [
-      l.label,
-      { label: l.label, color: LOCATION_COLORS[l.id] || `hsl(var(--chart-${(i % 5) + 1}))` },
-    ])
-  )
-  if (locationId !== "all") {
-    chartConfig["Capacity"] = { label: "Capacity", color: "hsl(var(--chart-1))" }
+  function toggle(id: string) {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
   }
+
+  const allSelected = selectedIds.size === GYMS.length
+  const noneSelected = selectedIds.size === 0
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Select value={range} onValueChange={setRange}>
           <SelectTrigger className="w-36">
             <SelectValue />
@@ -137,30 +129,67 @@ export function HistoryView() {
             {RANGES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Select value={locationId} onValueChange={setLocationId}>
-          <SelectTrigger className="w-48">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {LOCATIONS.map(l => <SelectItem key={l.id} value={l.id}>{l.label}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2 text-sm">
+          <button
+            onClick={() => setSelectedIds(new Set(GYMS.map(g => g.id)))}
+            disabled={allSelected}
+            className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40 disabled:hover:text-muted-foreground"
+          >
+            All
+          </button>
+          <span className="text-border">·</span>
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            disabled={noneSelected}
+            className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40 disabled:hover:text-muted-foreground"
+          >
+            None
+          </button>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {GYMS.map(g => {
+          const active = selectedIds.has(g.id)
+          return (
+            <button
+              key={g.id}
+              onClick={() => toggle(g.id)}
+              aria-pressed={active}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition-colors",
+                active ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <span
+                className="h-2.5 w-2.5 shrink-0 rounded-full border"
+                style={active
+                  ? { backgroundColor: g.color, borderColor: g.color }
+                  : { backgroundColor: "transparent", borderColor: "currentColor" }}
+              />
+              {g.label}
+            </button>
+          )
+        })}
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
-            {locationId === "all" ? "All locations" : LOCATIONS.find(l => l.id === locationId)?.label} — {RANGES.find(r => r.value === range)?.label}
+            {allSelected ? "All gyms" : `${selectedIds.size} gym${selectedIds.size === 1 ? "" : "s"}`} — {RANGES.find(r => r.value === range)?.label}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {loading && <p className="text-sm text-muted-foreground py-12 text-center">Loading…</p>}
           {error && <p className="text-sm text-destructive py-12 text-center">Error: {error}</p>}
-          {!loading && !error && data.length === 0 && (
+          {!loading && !error && noneSelected && (
+            <p className="text-sm text-muted-foreground py-12 text-center">Select at least one gym.</p>
+          )}
+          {!loading && !error && !noneSelected && data.length === 0 && (
             <p className="text-sm text-muted-foreground py-12 text-center">No data for this range.</p>
           )}
-          {!loading && !error && data.length > 0 && (
-            <ChartContainer config={chartConfig} className="h-72 w-full">
+          {!loading && !error && !noneSelected && data.length > 0 && (
+            <ChartContainer config={CHART_CONFIG} className="h-72 w-full">
               <LineChart data={data} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis
@@ -182,12 +211,12 @@ export function HistoryView() {
                   axisLine={false}
                 />
                 <ChartTooltip content={<ChartTooltipContent labelFormatter={formatTooltipLabel} />} />
-                {keys.map((key, i) => (
+                {keys.map(key => (
                   <Line
                     key={key}
                     type="monotone"
                     dataKey={key}
-                    stroke={chartConfig[key]?.color || `hsl(var(--chart-${(i % 5) + 1}))`}
+                    stroke={CHART_CONFIG[key]?.color}
                     strokeWidth={2}
                     dot={false}
                   />

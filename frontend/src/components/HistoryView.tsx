@@ -7,13 +7,13 @@ import { cn } from "@/lib/utils"
 
 // `label` must match the `title` returned by the API — lines are keyed by title.
 const GYMS = [
-  { id: "260", label: "Linz", color: "hsl(var(--chart-1))" },
-  { id: "261", label: "Salzburg", color: "hsl(var(--chart-2))" },
   { id: "262", label: "Hannovergasse", color: "hsl(var(--chart-3))" },
   { id: "263", label: "Hauptbahnhof", color: "hsl(var(--chart-4))" },
   { id: "264", label: "Seestadt", color: "hsl(var(--chart-5))" },
   { id: "265", label: "Wienerberg", color: "hsl(221.2 83.2% 40%)" },
   { id: "284", label: "St. Pölten", color: "hsl(160 60% 30%)" },
+  { id: "260", label: "Linz", color: "hsl(var(--chart-1))" },
+  { id: "261", label: "Salzburg", color: "hsl(var(--chart-2))" },
 ]
 
 const RANGES = [
@@ -108,45 +108,28 @@ export function HistoryView() {
 
   function toggle(id: string) {
     setSelectedIds(prev => {
+      // From the "all" state, a click isolates to just that gym.
+      if (prev.size === GYMS.length) return new Set([id])
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
       else next.add(id)
-      return next
+      // Clearing the last selection falls back to all.
+      return next.size === 0 ? new Set(GYMS.map(g => g.id)) : next
     })
   }
 
   const allSelected = selectedIds.size === GYMS.length
-  const noneSelected = selectedIds.size === 0
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <Select value={range} onValueChange={setRange}>
-          <SelectTrigger className="w-36">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {RANGES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <div className="flex gap-2 text-sm">
-          <button
-            onClick={() => setSelectedIds(new Set(GYMS.map(g => g.id)))}
-            disabled={allSelected}
-            className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40 disabled:hover:text-muted-foreground"
-          >
-            All
-          </button>
-          <span className="text-border">·</span>
-          <button
-            onClick={() => setSelectedIds(new Set())}
-            disabled={noneSelected}
-            className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40 disabled:hover:text-muted-foreground"
-          >
-            None
-          </button>
-        </div>
-      </div>
+      <Select value={range} onValueChange={setRange}>
+        <SelectTrigger className="w-36">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {RANGES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
+        </SelectContent>
+      </Select>
 
       <div className="flex flex-wrap gap-2">
         {GYMS.map(g => {
@@ -182,13 +165,10 @@ export function HistoryView() {
         <CardContent>
           {loading && <p className="text-sm text-muted-foreground py-12 text-center">Loading…</p>}
           {error && <p className="text-sm text-destructive py-12 text-center">Error: {error}</p>}
-          {!loading && !error && noneSelected && (
-            <p className="text-sm text-muted-foreground py-12 text-center">Select at least one gym.</p>
-          )}
-          {!loading && !error && !noneSelected && data.length === 0 && (
+          {!loading && !error && data.length === 0 && (
             <p className="text-sm text-muted-foreground py-12 text-center">No data for this range.</p>
           )}
-          {!loading && !error && !noneSelected && data.length > 0 && (
+          {!loading && !error && data.length > 0 && (
             <ChartContainer config={CHART_CONFIG} className="h-72 w-full">
               <LineChart data={data} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />

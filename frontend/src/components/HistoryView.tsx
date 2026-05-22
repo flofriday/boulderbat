@@ -23,6 +23,12 @@ const RANGES = [
   { value: "30d", label: "Last 30 days", hours: 24 * 30 },
 ]
 
+// Quick-select presets shown as chips alongside the individual gyms.
+const PRESETS = [
+  { id: "all", label: "All", ids: GYMS.map(g => g.id) },
+  { id: "wien", label: "Wien", ids: ["262", "263", "264", "265"] },
+]
+
 const CHART_CONFIG = Object.fromEntries(GYMS.map(g => [g.label, { label: g.label, color: g.color }]))
 
 // Polling cadence is 5 min — break the line if there's a > 15 min gap.
@@ -81,6 +87,10 @@ function formatTooltipLabel(ts: string | number) {
   })
 }
 
+function selectionEquals(selected: Set<string>, ids: string[]) {
+  return selected.size === ids.length && ids.every(id => selected.has(id))
+}
+
 export function HistoryView() {
   const [range, setRange] = useState("24h")
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set(GYMS.map(g => g.id)))
@@ -131,7 +141,24 @@ export function HistoryView() {
         </SelectContent>
       </Select>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        {PRESETS.map(p => {
+          const active = selectionEquals(selectedIds, p.ids)
+          return (
+            <button
+              key={p.id}
+              onClick={() => setSelectedIds(new Set(p.ids))}
+              aria-pressed={active}
+              className={cn(
+                "inline-flex items-center rounded-full border px-3 py-1 text-sm transition-colors",
+                active ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {p.label}
+            </button>
+          )
+        })}
+        <span className="mx-1 h-5 w-px bg-border" />
         {GYMS.map(g => {
           const active = selectedIds.has(g.id)
           return (

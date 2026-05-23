@@ -141,7 +141,7 @@ export function HistoryView() {
         </SelectContent>
       </Select>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap sm:overflow-visible sm:pb-0">
         {PRESETS.map(p => {
           const active = selectionEquals(selectedIds, p.ids)
           return (
@@ -150,7 +150,7 @@ export function HistoryView() {
               onClick={() => setSelectedIds(new Set(p.ids))}
               aria-pressed={active}
               className={cn(
-                "inline-flex items-center rounded-full border px-3 py-1 text-sm transition-colors",
+                "inline-flex shrink-0 items-center whitespace-nowrap rounded-full border px-3 py-1 text-sm transition-colors",
                 active ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -158,7 +158,7 @@ export function HistoryView() {
             </button>
           )
         })}
-        <span className="mx-1 h-5 w-px bg-border" />
+        <span className="mx-1 h-5 w-px shrink-0 bg-border" />
         {GYMS.map(g => {
           const active = selectedIds.has(g.id)
           return (
@@ -167,7 +167,7 @@ export function HistoryView() {
               onClick={() => toggle(g.id)}
               aria-pressed={active}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition-colors",
+                "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1 text-sm transition-colors",
                 active ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -184,12 +184,12 @@ export function HistoryView() {
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="px-4 sm:px-6">
           <CardTitle className="text-base">
             {allSelected ? "All gyms" : `${selectedIds.size} gym${selectedIds.size === 1 ? "" : "s"}`} — {RANGES.find(r => r.value === range)?.label}
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-2 sm:px-6">
           {loading && <p className="text-sm text-muted-foreground py-12 text-center">Loading…</p>}
           {error && <p className="text-sm text-destructive py-12 text-center">Error: {error}</p>}
           {!loading && !error && data.length === 0 && (

@@ -3,7 +3,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 import { searchParams, updateUrl } from "@/lib/url-state"
 
 // `label` must match the `title` returned by the API — lines are keyed by title.
@@ -228,14 +228,14 @@ export function HistoryView() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <button
-          type="button"
+        <Button
+          variant="outline"
+          size="icon"
           onClick={() => selectDay(shiftDate(selectedDay, -1))}
           aria-label="Previous day"
-          className="inline-flex size-10 items-center justify-center rounded-md border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
           <ChevronLeft className="size-4" />
-        </button>
+        </Button>
         <label className="flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium">
           <span className="text-muted-foreground">{selectedDayLabel}</span>
           <input
@@ -247,23 +247,23 @@ export function HistoryView() {
             className="w-32 bg-transparent text-foreground outline-none"
           />
         </label>
-        <button
-          type="button"
+        <Button
+          variant="outline"
+          size="icon"
           onClick={() => selectDay(shiftDate(selectedDay, 1))}
           disabled={selectedDay === today}
           aria-label="Next day"
-          className="inline-flex size-10 items-center justify-center rounded-md border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
         >
           <ChevronRight className="size-4" />
-        </button>
+        </Button>
         {selectedDay !== today && (
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => selectDay(today)}
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             Today
-          </button>
+          </Button>
         )}
       </div>
 
@@ -271,31 +271,29 @@ export function HistoryView() {
         {PRESETS.map(p => {
           const active = selectionEquals(selectedIds, p.ids)
           return (
-            <button
+            <Button
               key={p.id}
               onClick={() => selectGymIds(p.ids)}
               aria-pressed={active}
-              className={cn(
-                "inline-flex shrink-0 items-center whitespace-nowrap rounded-full border px-3 py-1 text-sm transition-colors",
-                active ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
-              )}
+              variant={active ? "secondary" : "outline"}
+              size="sm"
+              className="shrink-0 rounded-full"
             >
               {p.label}
-            </button>
+            </Button>
           )
         })}
         <span className="mx-1 h-5 w-px shrink-0 bg-border" />
         {GYMS.map(g => {
           const active = selectedIds.has(g.id)
           return (
-            <button
+            <Button
               key={g.id}
               onClick={() => toggle(g.id)}
               aria-pressed={active}
-              className={cn(
-                "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1 text-sm transition-colors",
-                active ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
-              )}
+              variant={active ? "secondary" : "outline"}
+              size="sm"
+              className="shrink-0 rounded-full"
             >
               <span
                 className="h-2.5 w-2.5 shrink-0 rounded-full border"
@@ -304,7 +302,7 @@ export function HistoryView() {
                   : { backgroundColor: "transparent", borderColor: "currentColor" }}
               />
               {g.label}
-            </button>
+            </Button>
           )
         })}
       </div>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 import { searchParams, updateUrl } from "@/lib/url-state"
 
 const GYMS = [
@@ -111,18 +111,17 @@ export function TypicalWeekView() {
         {GYMS.map(gym => {
           const active = gym.id === selectedGymId
           return (
-            <button
+            <Button
               key={gym.id}
               onClick={() => selectGym(gym.id)}
               aria-pressed={active}
-              className={cn(
-                "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1 text-sm transition-colors",
-                active ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground",
-              )}
+              variant={active ? "secondary" : "outline"}
+              size="sm"
+              className="shrink-0 rounded-full"
             >
               <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: gym.color }} />
               {gym.label}
-            </button>
+            </Button>
           )
         })}
       </div>

@@ -7,7 +7,7 @@ export type ChartConfig = Record<string, { label?: string; color?: string }>
 type ChartContextProps = { config: ChartConfig }
 const ChartContext = React.createContext<ChartContextProps | null>(null)
 
-export function useChart() {
+function useChart() {
   const ctx = React.useContext(ChartContext)
   if (!ctx) throw new Error("useChart must be used within <ChartContainer />")
   return ctx

@@ -12,7 +12,8 @@ function GithubIcon({ className }: { className?: string }) {
 import { LiveView } from "@/components/LiveView"
 import { HistoryView } from "@/components/HistoryView"
 import { TypicalWeekView } from "@/components/TypicalWeekView"
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { searchParams, updateUrl } from "@/lib/url-state"
 
 type Tab = "live" | "history" | "typical-week"
@@ -69,49 +70,44 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-5xl px-4 py-8 space-y-6">
-        <header className="flex items-center gap-4">
-          <img src={logo} alt="" className="h-12 w-12 rounded-lg" />
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Boulderbat</h1>
-            <p className="text-sm text-muted-foreground mt-1">Find the best time to hang out at the gym</p>
+      <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:py-8">
+        <header className="flex items-center gap-3 sm:gap-4">
+          <img src={logo} alt="" className="size-10 rounded-lg sm:size-12" />
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Boulderbat</h1>
+            <p className="truncate text-sm text-muted-foreground">Find the best time to hang out at the gym</p>
+          </div>
+          <div className="ml-auto flex items-center gap-1">
+            <Button asChild variant="ghost" size="sm">
+              <a href="/docs" target="_blank" rel="noopener noreferrer">
+                API docs
+                <ExternalLink className="size-4" />
+              </a>
+            </Button>
+            <Button asChild variant="ghost" size="icon-sm">
+              <a
+                href="https://github.com/flofriday/boulderbat"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="GitHub repository"
+              >
+                <GithubIcon className="size-4" />
+              </a>
+            </Button>
           </div>
         </header>
 
-        <nav className="flex gap-1 border-b">
-          {TABS.map(t => (
-            <button
-              key={t.id}
-              onClick={() => selectTab(t.id)}
-              className={cn(
-                "px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px",
-                tab === t.id
-                  ? "border-primary text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {t.label}
-            </button>
-          ))}
-          <a
-            href="/docs"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="ml-auto inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors border-b-2 border-transparent -mb-px"
-          >
-            API
-            <ExternalLink className="h-3.5 w-3.5" />
-          </a>
-          <a
-            href="https://github.com/flofriday/boulderbat"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="GitHub repository"
-            className="inline-flex items-center px-3 py-2 text-muted-foreground hover:text-foreground transition-colors border-b-2 border-transparent -mb-px"
-          >
-            <GithubIcon className="h-4 w-4" />
-          </a>
-        </nav>
+        <Tabs value={tab} onValueChange={value => selectTab(value as Tab)}>
+          <nav className="overflow-x-auto pb-1" aria-label="Main navigation">
+            <TabsList className="h-auto min-w-max gap-1 rounded-lg p-1">
+              {TABS.map(item => (
+                <TabsTrigger key={item.id} value={item.id} className="h-9 px-3 sm:px-4">
+                  {item.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </nav>
+        </Tabs>
 
         <main>
           {tab === "live" && <LiveView />}

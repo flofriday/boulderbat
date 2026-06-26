@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { cn } from "@/lib/utils"
+import { searchParams, updateUrl } from "@/lib/url-state"
 
 // `label` must match the `title` returned by the API — lines are keyed by title.
 const GYMS = [
@@ -115,16 +116,61 @@ function formatDayLabel(value: string, today: string) {
   return dateFromValue(value).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })
 }
 
+function dayFromUrl(today: string) {
+  const value = searchParams().get("d") ?? searchParams().get("date")
+  if (!value || value > today || Number.isNaN(dateFromValue(value).getTime())) return today
+  return value
+}
+
+function gymIdsFromUrl() {
+  const value = searchParams().get("g") ?? searchParams().get("gyms")
+  if (!value) return new Set(GYMS.map(gym => gym.id))
+
+  const validIds = value.split(",").filter(id => GYMS.some(gym => gym.id === id))
+  return validIds.length > 0 ? new Set(validIds) : new Set(GYMS.map(gym => gym.id))
+}
+
 export function HistoryView() {
   const [today] = useState(() => toDateValue(new Date()))
-  const [selectedDay, setSelectedDay] = useState(() => toDateValue(new Date()))
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set(GYMS.map(g => g.id)))
+  const [selectedDay, setSelectedDay] = useState(() => dayFromUrl(today))
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(gymIdsFromUrl)
   const [readings, setReadings] = useState<Reading[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const { start, end } = useMemo(() => dayRange(selectedDay), [selectedDay])
   const selectedDayLabel = formatDayLabel(selectedDay, today)
+  const allSelected = selectedIds.size === GYMS.length
+
+  useEffect(() => {
+    const params = searchParams()
+    const gymIds = allSelected ? null : [...selectedIds].join(",")
+    if (
+      params.get("d") !== selectedDay ||
+      params.get("g") !== gymIds ||
+      params.has("date") ||
+      params.has("gyms") ||
+      params.has("gym")
+    ) {
+      updateUrl({
+        d: selectedDay,
+        g: gymIds,
+        date: null,
+        gyms: null,
+        gym: null,
+      }, true)
+    }
+
+    const syncSelection = () => {
+      const nextDay = dayFromUrl(today)
+      const nextIds = gymIdsFromUrl()
+      setLoading(true)
+      setSelectedDay(current => current === nextDay ? current : nextDay)
+      setSelectedIds(current => selectionEquals(current, [...nextIds]) ? current : nextIds)
+    }
+    window.addEventListener("popstate", syncSelection)
+    return () => window.removeEventListener("popstate", syncSelection)
+  }, [allSelected, selectedDay, selectedIds, today])
 
   useEffect(() => {
     let cancelled = false
@@ -149,23 +195,34 @@ export function HistoryView() {
   const { data, keys } = useMemo(() => buildChartData(readings, selectedIds), [readings, selectedIds])
 
   function toggle(id: string) {
-    setSelectedIds(prev => {
-      // From the "all" state, a click isolates to just that gym.
-      if (prev.size === GYMS.length) return new Set([id])
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      // Clearing the last selection falls back to all.
-      return next.size === 0 ? new Set(GYMS.map(g => g.id)) : next
-    })
-  }
+    // From the "all" state, a click isolates to just that gym.
+    if (selectedIds.size === GYMS.length) {
+      setSelectedIds(new Set([id]))
+      updateUrl({ g: id })
+      return
+    }
 
-  const allSelected = selectedIds.size === GYMS.length
+    const next = new Set(selectedIds)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    // Clearing the last selection falls back to all.
+    const selected = next.size === 0 ? new Set(GYMS.map(g => g.id)) : next
+    setSelectedIds(selected)
+    updateUrl({ g: selected.size === GYMS.length ? null : [...selected].join(",") })
+  }
 
   function selectDay(day: string) {
     if (day === selectedDay) return
     setLoading(true)
     setSelectedDay(day)
+    updateUrl({ d: day })
+  }
+
+  function selectGymIds(ids: string[]) {
+    const nextIds = new Set(ids)
+    if (selectionEquals(selectedIds, ids)) return
+    setSelectedIds(nextIds)
+    updateUrl({ g: ids.length === GYMS.length ? null : ids.join(",") })
   }
 
   return (
@@ -216,7 +273,7 @@ export function HistoryView() {
           return (
             <button
               key={p.id}
-              onClick={() => setSelectedIds(new Set(p.ids))}
+              onClick={() => selectGymIds(p.ids)}
               aria-pressed={active}
               className={cn(
                 "inline-flex shrink-0 items-center whitespace-nowrap rounded-full border px-3 py-1 text-sm transition-colors",

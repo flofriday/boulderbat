@@ -1,9 +1,13 @@
 import os
+from collections import defaultdict
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import aiosqlite
 
 DB_PATH = os.getenv("DB_PATH", "data/boulderbat.db")
+VIENNA_TIMEZONE = ZoneInfo("Europe/Vienna")
 
 
 async def init_db() -> None:
@@ -116,3 +120,39 @@ async def get_history(
                 ORDER BY r.recorded_at, l.title
             """, (start, end))
         return [dict(row) for row in await cursor.fetchall()]
+
+
+async def get_typical_week(location_id: int) -> dict:
+    """Average occupancy for each local weekday and hour, from 08:00 onward."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cursor = await db.execute("""
+            SELECT capacity, recorded_at
+            FROM readings
+            WHERE location_id = ?
+            ORDER BY recorded_at
+        """, (location_id,))
+        rows = await cursor.fetchall()
+
+    buckets: defaultdict[tuple[int, int], list[int]] = defaultdict(list)
+    weeks: set[tuple[int, int]] = set()
+    for row in rows:
+        recorded_at = datetime.fromisoformat(row["recorded_at"].replace("Z", "+00:00"))
+        local_time = recorded_at.astimezone(VIENNA_TIMEZONE)
+        if 8 <= local_time.hour < 24:
+            buckets[(local_time.weekday(), local_time.hour)].append(row["capacity"])
+            iso_year, iso_week, _ = local_time.isocalendar()
+            weeks.add((iso_year, iso_week))
+
+    return {
+        "cells": [
+            {
+                "weekday": weekday,
+                "hour": hour,
+                "average_capacity": round(sum(capacities) / len(capacities), 1),
+                "sample_count": len(capacities),
+            }
+            for (weekday, hour), capacities in sorted(buckets.items())
+        ],
+        "week_count": len(weeks),
+    }

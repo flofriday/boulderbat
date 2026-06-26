@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from app.collector import collect_capacity
-from app.db import get_history, get_live, init_db
+from app.db import get_history, get_live, get_typical_week, init_db
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -48,6 +48,18 @@ class HistoryReading(BaseModel):
     recorded_at: str
 
 
+class TypicalWeekReading(BaseModel):
+    weekday: int
+    hour: int
+    average_capacity: float
+    sample_count: int
+
+
+class TypicalWeekResponse(BaseModel):
+    cells: list[TypicalWeekReading]
+    week_count: int
+
+
 @app.get("/live", response_model=list[LiveReading])
 async def live():
     """Latest capacity reading for every location."""
@@ -71,6 +83,14 @@ async def history(
         return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     return await get_history(to_utc(start), to_utc(end), location_id)
+
+
+@app.get("/typical-week", response_model=TypicalWeekResponse)
+async def typical_week(
+    location_id: int = Query(..., description="Location ID to summarize"),
+):
+    """Average occupancy for each weekday and hour in Europe/Vienna time."""
+    return await get_typical_week(location_id)
 
 
 if STATIC_DIR.exists():

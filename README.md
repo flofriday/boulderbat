@@ -100,6 +100,14 @@ curl "http://localhost:8000/history?start=2026-04-27T00:00:00Z&end=2026-04-28T00
 curl "http://localhost:8000/history?start=2026-04-27T00:00:00Z&end=2026-04-28T00:00:00Z&location_id=260"
 ```
 
+### `GET /typical-week`
+
+Returns average capacity for each local weekday and hour from 08:00 to midnight, along with the number of local calendar weeks represented. `location_id` is required; timestamps are grouped in the `Europe/Vienna` timezone.
+
+```bash
+curl "http://localhost:8000/typical-week?location_id=262"
+```
+
 ## Location IDs
 
 | ID  | Location       |

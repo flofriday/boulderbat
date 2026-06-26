@@ -12,6 +12,7 @@ export default defineConfig({
     proxy: {
       '/live': 'http://localhost:8000',
       '/history': 'http://localhost:8000',
+      '/typical-week': 'http://localhost:8000',
       '/docs': 'http://localhost:8000',
       '/redoc': 'http://localhost:8000',
       '/openapi.json': 'http://localhost:8000',

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { ExternalLink } from "lucide-react"
 import logo from "@/assets/logo.svg"
 
@@ -11,12 +11,61 @@ function GithubIcon({ className }: { className?: string }) {
 }
 import { LiveView } from "@/components/LiveView"
 import { HistoryView } from "@/components/HistoryView"
+import { TypicalWeekView } from "@/components/TypicalWeekView"
 import { cn } from "@/lib/utils"
+import { searchParams, updateUrl } from "@/lib/url-state"
 
-type Tab = "live" | "history"
+type Tab = "live" | "history" | "typical-week"
+
+const TABS: { id: Tab; label: string }[] = [
+  { id: "live", label: "Live" },
+  { id: "history", label: "History" },
+  { id: "typical-week", label: "Typical week" },
+]
+
+const TAB_URL_VALUES: Record<Tab, string> = {
+  live: "l",
+  history: "h",
+  "typical-week": "w",
+}
+
+function tabFromUrl(): Tab {
+  const tab = searchParams().get("t")
+  if (tab === "h") return "history"
+  if (tab === "w") return "typical-week"
+  if (tab === "l") return "live"
+
+  // Accept previously shared URLs and normalize them to the shorter form.
+  const legacyTab = searchParams().get("tab")
+  return TABS.some(candidate => candidate.id === legacyTab) ? legacyTab as Tab : "live"
+}
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>("live")
+  const [tab, setTab] = useState<Tab>(tabFromUrl)
+
+  useEffect(() => {
+    if (searchParams().get("t") !== TAB_URL_VALUES[tab] || searchParams().has("tab")) {
+      updateUrl({ t: TAB_URL_VALUES[tab], tab: null }, true)
+    }
+
+    const syncTab = () => setTab(tabFromUrl())
+    window.addEventListener("popstate", syncTab)
+    return () => window.removeEventListener("popstate", syncTab)
+  }, [tab])
+
+  function selectTab(nextTab: Tab) {
+    if (nextTab === tab) return
+    setTab(nextTab)
+    updateUrl({
+      t: TAB_URL_VALUES[nextTab],
+      d: null,
+      g: null,
+      tab: null,
+      date: null,
+      gyms: null,
+      gym: null,
+    })
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -30,18 +79,18 @@ export default function App() {
         </header>
 
         <nav className="flex gap-1 border-b">
-          {(["live", "history"] as Tab[]).map(t => (
+          {TABS.map(t => (
             <button
-              key={t}
-              onClick={() => setTab(t)}
+              key={t.id}
+              onClick={() => selectTab(t.id)}
               className={cn(
-                "px-4 py-2 text-sm font-medium capitalize transition-colors border-b-2 -mb-px",
-                tab === t
+                "px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px",
+                tab === t.id
                   ? "border-primary text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               )}
             >
-              {t}
+              {t.label}
             </button>
           ))}
           <a
@@ -65,7 +114,9 @@ export default function App() {
         </nav>
 
         <main>
-          {tab === "live" ? <LiveView /> : <HistoryView />}
+          {tab === "live" && <LiveView />}
+          {tab === "history" && <HistoryView />}
+          {tab === "typical-week" && <TypicalWeekView />}
         </main>
       </div>
     </div>

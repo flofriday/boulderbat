@@ -49,6 +49,33 @@ async def insert_readings(locations: list[dict], recorded_at: str) -> None:
         await db.commit()
 
 
+async def import_history_readings(readings: list[dict]) -> int:
+    """Insert production history, skipping readings already present locally."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        changes_before = db.total_changes
+        await db.executemany(
+            """
+            INSERT INTO readings(location_id, capacity, recorded_at)
+            SELECT ?, ?, ?
+            WHERE NOT EXISTS (
+                SELECT 1 FROM readings WHERE location_id = ? AND recorded_at = ?
+            )
+            """,
+            [
+                (
+                    int(reading["location_id"]),
+                    int(reading["capacity"]),
+                    reading["recorded_at"],
+                    int(reading["location_id"]),
+                    reading["recorded_at"],
+                )
+                for reading in readings
+            ],
+        )
+        await db.commit()
+        return db.total_changes - changes_before
+
+
 async def get_live() -> list[dict]:
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row

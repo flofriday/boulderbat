@@ -52,9 +52,20 @@ cd frontend && npm run build
 
 By default the database is written to `data/boulderbat.db`. Override with the `DB_PATH` environment variable.
 
+### Import production data for local development
+
+To seed a local database with the public production history, run:
+
+```bash
+cd backend
+uv run python -m app.import_production_history
+```
+
+The importer downloads the complete archive from `https://boulderbat.flofriday.dev`, adds any missing readings to the local database, and is safe to run again. Use `--dry-run` to inspect the download without writing, or `--start 2026-06-01T00:00:00Z` and `--end 2026-06-02T00:00:00Z` to import a narrower UTC range.
+
 ## API
 
-Interactive docs are available at `http://localhost:8000/docs`.
+Interactive docs are available locally at `http://localhost:8000/docs` and in production at [boulderbat.flofriday.dev/docs](https://boulderbat.flofriday.dev/docs).
 
 ### `GET /live`
 

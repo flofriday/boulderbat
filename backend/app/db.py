@@ -76,7 +76,7 @@ async def get_history(
                 SELECT l.id AS location_id, l.title, r.capacity, r.recorded_at
                 FROM readings r
                 JOIN locations l ON l.id = r.location_id
-                WHERE r.recorded_at BETWEEN ? AND ?
+                WHERE r.recorded_at >= ? AND r.recorded_at < ?
                   AND r.location_id = ?
                 ORDER BY r.recorded_at
             """, (start, end, location_id))
@@ -85,7 +85,7 @@ async def get_history(
                 SELECT l.id AS location_id, l.title, r.capacity, r.recorded_at
                 FROM readings r
                 JOIN locations l ON l.id = r.location_id
-                WHERE r.recorded_at BETWEEN ? AND ?
+                WHERE r.recorded_at >= ? AND r.recorded_at < ?
                 ORDER BY r.recorded_at, l.title
             """, (start, end))
         return [dict(row) for row in await cursor.fetchall()]

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 
 // `label` must match the `title` returned by the API — lines are keyed by title.
@@ -16,12 +16,8 @@ const GYMS = [
   { id: "261", label: "Salzburg", color: "hsl(var(--chart-2))" },
 ]
 
-const RANGES = [
-  { value: "6h", label: "Last 6 h", hours: 6 },
-  { value: "24h", label: "Last 24 h", hours: 24 },
-  { value: "7d", label: "Last 7 days", hours: 24 * 7 },
-  { value: "30d", label: "Last 30 days", hours: 24 * 30 },
-]
+const DAY_START_HOUR = 8
+const DAY_RANGE_LABEL = "08:00–00:00"
 
 // Quick-select presets shown as chips alongside the individual gyms.
 const PRESETS = [
@@ -73,12 +69,9 @@ function buildChartData(readings: Reading[], selectedIds: Set<string>): { data: 
   return { data: withGaps, keys }
 }
 
-function formatTick(ts: number, rangeHours: number) {
+function formatTick(ts: number) {
   const d = new Date(ts)
-  if (rangeHours <= 24) {
-    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })
-  }
-  return d.toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false })
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })
 }
 
 function formatTooltipLabel(ts: string | number) {
@@ -91,28 +84,67 @@ function selectionEquals(selected: Set<string>, ids: string[]) {
   return selected.size === ids.length && ids.every(id => selected.has(id))
 }
 
+function toDateValue(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
+
+function dateFromValue(value: string) {
+  const [year, month, day] = value.split("-").map(Number)
+  return new Date(year, month - 1, day)
+}
+
+function shiftDate(value: string, days: number) {
+  const date = dateFromValue(value)
+  date.setDate(date.getDate() + days)
+  return toDateValue(date)
+}
+
+function dayRange(value: string) {
+  const date = dateFromValue(value)
+  const start = new Date(date.getFullYear(), date.getMonth(), date.getDate(), DAY_START_HOUR)
+  const end = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1)
+  return { start, end }
+}
+
+function formatDayLabel(value: string, today: string) {
+  if (value === today) return "Today"
+  if (value === shiftDate(today, -1)) return "Yesterday"
+  return dateFromValue(value).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })
+}
+
 export function HistoryView() {
-  const [range, setRange] = useState("24h")
+  const [today] = useState(() => toDateValue(new Date()))
+  const [selectedDay, setSelectedDay] = useState(() => toDateValue(new Date()))
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set(GYMS.map(g => g.id)))
   const [readings, setReadings] = useState<Reading[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const rangeHours = RANGES.find(r => r.value === range)!.hours
+  const { start, end } = useMemo(() => dayRange(selectedDay), [selectedDay])
+  const selectedDayLabel = formatDayLabel(selectedDay, today)
 
   useEffect(() => {
-    setLoading(true)
-    const end = new Date()
-    const start = new Date(end.getTime() - rangeHours * 3600_000)
+    let cancelled = false
     const fmt = (d: Date) => d.toISOString().replace(".000", "")
     const params = new URLSearchParams({ start: fmt(start), end: fmt(end) })
 
     fetch(`/history?${params}`)
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
-      .then(d => { setReadings(d); setError(null) })
-      .catch(e => setError(e instanceof Error ? e.message : "Failed to fetch"))
-      .finally(() => setLoading(false))
-  }, [range, rangeHours])
+      .then(d => {
+        if (cancelled) return
+        setReadings(d)
+        setError(null)
+      })
+      .catch(e => {
+        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to fetch")
+      })
+      .finally(() => { if (!cancelled) setLoading(false) })
+
+    return () => { cancelled = true }
+  }, [start, end])
 
   const { data, keys } = useMemo(() => buildChartData(readings, selectedIds), [readings, selectedIds])
 
@@ -130,16 +162,53 @@ export function HistoryView() {
 
   const allSelected = selectedIds.size === GYMS.length
 
+  function selectDay(day: string) {
+    if (day === selectedDay) return
+    setLoading(true)
+    setSelectedDay(day)
+  }
+
   return (
     <div className="space-y-4">
-      <Select value={range} onValueChange={setRange}>
-        <SelectTrigger className="w-36">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {RANGES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
-        </SelectContent>
-      </Select>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => selectDay(shiftDate(selectedDay, -1))}
+          aria-label="Previous day"
+          className="inline-flex size-10 items-center justify-center rounded-md border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        >
+          <ChevronLeft className="size-4" />
+        </button>
+        <label className="flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium">
+          <span className="text-muted-foreground">{selectedDayLabel}</span>
+          <input
+            type="date"
+            value={selectedDay}
+            max={today}
+            onChange={event => selectDay(event.target.value)}
+            aria-label="Select day"
+            className="w-32 bg-transparent text-foreground outline-none"
+          />
+        </label>
+        <button
+          type="button"
+          onClick={() => selectDay(shiftDate(selectedDay, 1))}
+          disabled={selectedDay === today}
+          aria-label="Next day"
+          className="inline-flex size-10 items-center justify-center rounded-md border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+        >
+          <ChevronRight className="size-4" />
+        </button>
+        {selectedDay !== today && (
+          <button
+            type="button"
+            onClick={() => selectDay(today)}
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Today
+          </button>
+        )}
+      </div>
 
       <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap sm:overflow-visible sm:pb-0">
         {PRESETS.map(p => {
@@ -186,7 +255,7 @@ export function HistoryView() {
       <Card>
         <CardHeader className="px-4 sm:px-6">
           <CardTitle className="text-base">
-            {allSelected ? "All gyms" : `${selectedIds.size} gym${selectedIds.size === 1 ? "" : "s"}`} — {RANGES.find(r => r.value === range)?.label}
+            {allSelected ? "All gyms" : `${selectedIds.size} gym${selectedIds.size === 1 ? "" : "s"}`} — {selectedDayLabel}, {DAY_RANGE_LABEL}
           </CardTitle>
         </CardHeader>
         <CardContent className="px-2 sm:px-6">
@@ -203,8 +272,8 @@ export function HistoryView() {
                   dataKey="ts"
                   type="number"
                   scale="time"
-                  domain={["dataMin", "dataMax"]}
-                  tickFormatter={ts => formatTick(ts, rangeHours)}
+                  domain={[start.getTime(), end.getTime()]}
+                  tickFormatter={formatTick}
                   tick={{ fontSize: 11 }}
                   tickLine={false}
                   axisLine={false}

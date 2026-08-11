@@ -1,6 +1,6 @@
 import os
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -123,15 +123,22 @@ async def get_history(
 
 
 async def get_typical_week(location_id: int) -> dict:
-    """Average occupancy for each local weekday and hour, from 08:00 onward."""
+    """Average occupancy for the latest eight local calendar weeks, from 08:00 onward."""
+    now = datetime.now(VIENNA_TIMEZONE)
+    current_week_start = (now - timedelta(days=now.weekday())).replace(
+        hour=0, minute=0, second=0, microsecond=0,
+    )
+    window_start = current_week_start - timedelta(weeks=7)
+    window_start_utc = window_start.astimezone(ZoneInfo("UTC")).strftime("%Y-%m-%dT%H:%M:%SZ")
+
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
         cursor = await db.execute("""
             SELECT capacity, recorded_at
             FROM readings
-            WHERE location_id = ?
+            WHERE location_id = ? AND recorded_at >= ?
             ORDER BY recorded_at
-        """, (location_id,))
+        """, (location_id, window_start_utc))
         rows = await cursor.fetchall()
 
     buckets: defaultdict[tuple[int, int], list[int]] = defaultdict(list)

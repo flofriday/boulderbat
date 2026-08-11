@@ -176,7 +176,7 @@ export function TypicalWeekView() {
                 <span>Busy</span>
               </div>
               <p className="text-xs text-muted-foreground">
-                Based on {totalSamples.toLocaleString()} readings across {weekCount} calendar week{weekCount === 1 ? "" : "s"}.
+                Based on {totalSamples.toLocaleString()} readings across {weekCount} of the last 8 calendar week{weekCount === 1 ? "" : "s"}.
               </p>
             </div>
           )}

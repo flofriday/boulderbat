@@ -21,7 +21,7 @@ function capacityStatus(pct: number) {
 
 // "boulderbar.net" -> "Boulderbar"; gyms are titled by place, so show the operator underneath.
 function providerName(url: string) {
-  const name = new URL(url).hostname.replace(/^www./, "").split(".")[0]
+  const name = new URL(url).hostname.replace(/^www\./, "").split(".")[0]
   return name.charAt(0).toUpperCase() + name.slice(1)
 }
 

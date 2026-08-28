@@ -12,6 +12,7 @@ const GYMS = [
   { id: "263", label: "Hauptbahnhof", color: "hsl(var(--chart-4))" },
   { id: "264", label: "Seestadt", color: "hsl(var(--chart-5))" },
   { id: "265", label: "Wienerberg", color: "hsl(221.2 83.2% 40%)" },
+  { id: "1001", label: "Blockfabrik", color: "hsl(30 90% 45%)" },
   { id: "284", label: "St. Pölten", color: "hsl(160 60% 30%)" },
   { id: "260", label: "Linz", color: "hsl(var(--chart-1))" },
   { id: "261", label: "Salzburg", color: "hsl(var(--chart-2))" },
@@ -23,7 +24,7 @@ const DAY_RANGE_LABEL = "08:00–00:00"
 // Quick-select presets shown as chips alongside the individual gyms.
 const PRESETS = [
   { id: "all", label: "All", ids: GYMS.map(g => g.id) },
-  { id: "wien", label: "Wien", ids: ["262", "263", "264", "265"] },
+  { id: "wien", label: "Wien", ids: ["262", "263", "264", "265", "1001"] },
 ]
 
 const CHART_CONFIG = Object.fromEntries(GYMS.map(g => [g.label, { label: g.label, color: g.color }]))

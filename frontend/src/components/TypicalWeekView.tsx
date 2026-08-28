@@ -8,6 +8,7 @@ const GYMS = [
   { id: "263", label: "Hauptbahnhof", color: "hsl(var(--chart-4))" },
   { id: "264", label: "Seestadt", color: "hsl(var(--chart-5))" },
   { id: "265", label: "Wienerberg", color: "hsl(221.2 83.2% 40%)" },
+  { id: "1001", label: "Blockfabrik", color: "hsl(30 90% 45%)" },
   { id: "284", label: "St. Pölten", color: "hsl(160 60% 30%)" },
   { id: "260", label: "Linz", color: "hsl(var(--chart-1))" },
   { id: "261", label: "Salzburg", color: "hsl(var(--chart-2))" },

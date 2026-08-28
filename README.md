@@ -69,7 +69,7 @@ Interactive docs are available locally at `http://localhost:8000/docs` and in pr
 
 ### `GET /live`
 
-Returns the most recent capacity reading for each of the 7 locations.
+Returns the most recent capacity reading for each of the 8 locations.
 
 ```bash
 curl http://localhost:8000/live
@@ -119,3 +119,4 @@ curl "http://localhost:8000/typical-week?location_id=262"
 | 264 | Seestadt       |
 | 265 | Wienerberg     |
 | 284 | St. Pölten     |
+| 1001 | Blockfabrik   |

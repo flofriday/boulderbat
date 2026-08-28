@@ -19,6 +19,12 @@ function capacityStatus(pct: number) {
   return { label: "Busy", badgeClassName: "border-red-200 bg-red-50 text-red-700", barClassName: "bg-red-500" }
 }
 
+// "boulderbar.net" -> "Boulderbar"; gyms are titled by place, so show the operator underneath.
+function providerName(url: string) {
+  const name = new URL(url).hostname.replace(/^www\./, "").split(".")[0]
+  return name.charAt(0).toUpperCase() + name.slice(1)
+}
+
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })
 }
@@ -97,12 +103,15 @@ export function LiveView() {
         {data.map((loc) => (
           <Card key={loc.id} className="overflow-hidden">
             <CardHeader className="flex-row items-start justify-between space-y-0 pb-3">
-              <CardTitle className="flex min-w-0 items-center gap-2 text-base">
-                <MapPin className="size-4 shrink-0 text-muted-foreground" />
-                <a href={loc.url} target="_blank" rel="noopener noreferrer" className="truncate hover:underline">
-                  {loc.title}
-                </a>
-              </CardTitle>
+              <div className="min-w-0">
+                <CardTitle className="flex min-w-0 items-center gap-2 text-base">
+                  <MapPin className="size-4 shrink-0 text-muted-foreground" />
+                  <a href={loc.url} target="_blank" rel="noopener noreferrer" className="truncate hover:underline">
+                    {loc.title}
+                  </a>
+                </CardTitle>
+                <p className="pl-6 text-xs text-muted-foreground">{providerName(loc.url)}</p>
+              </div>
               <Badge variant="outline" className={capacityStatus(loc.capacity).badgeClassName}>
                 {capacityStatus(loc.capacity).label}
               </Badge>

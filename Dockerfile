@@ -17,7 +17,7 @@ ENV UV_COMPILE_BYTECODE=1 \
     DB_PATH=/data/boulderbat.db \
     TZ=Europe/Vienna \
     TIMESTRAL_CACHE_DIR=/data/models \
-    PREDICTION_THREADS=1
+    PREDICTION_THREADS=2
 
 COPY backend/pyproject.toml backend/uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project

@@ -14,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from app.collector import collect_capacity
 from app.db import get_history, get_live, get_typical_week, init_db
 from app.prediction import prediction_service
+from app.request_logging import RequestLoggingMiddleware, configure_access_logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -23,6 +24,7 @@ STATIC_DIR = Path(__file__).parent.parent.parent / "frontend" / "dist"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    configure_access_logging()
     await init_db()
     await collect_capacity()
 
@@ -34,6 +36,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Boulderbat Capacity API", lifespan=lifespan)
+app.add_middleware(RequestLoggingMiddleware)
 
 
 class LiveReading(BaseModel):

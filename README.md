@@ -52,6 +52,19 @@ cd frontend && npm run build
 
 By default the database is written to `data/boulderbat.db`. Override with the `DB_PATH` environment variable.
 
+HTTP access logs include the status code and server-side response duration in
+milliseconds, for example:
+
+```text
+INFO:app.access:127.0.0.1:54321 - "GET /history?date=2026-10-23 HTTP/1.1" 200 duration_ms=12.4
+```
+
+Timing runs from request entry through sending the final response body (including
+streamed responses). It excludes background tasks after the response; browser
+download times may differ. Failed requests are timed until failure. Uvicorn's default access
+entry is disabled at startup to avoid duplicate request logs; its error logging
+remains enabled.
+
 ### Import production data for local development
 
 To seed a local database with the public production history, run:

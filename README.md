@@ -148,13 +148,22 @@ and `p90` (the bounds of the central 80% prediction interval). Points are remain
 The first point is at the response time; the last repeats the final 15-minute
 estimate at 23:59:59, so no prediction timestamp falls on tomorrow.
 
-The model reads up to eight local weeks of history in 15-minute bins ending at the
-latest completed quarter-hour. Newer locations use all available history within
-that window, starting at their first observed bin. Internal gaps remain missing.
-Inference runs on CPU
-outside the async request loop. The model stays loaded and forecasts are cached
-until the next quarter-hour; requests share that computation. This current-time
-forecast differs from the notebook's fixed 08:00 evaluation cutoff.
+The model reads up to eight local weeks of history in 15-minute bins, with both
+input intervals and refresh boundaries shifted one minute past each quarter-hour:
+`:01`, `:16`, `:31`, and `:46`. For example, the last input bin at 15:16 covers
+15:01–15:16 and includes readings timestamped 15:15, provided they have been saved
+before inference reads the database. The cutoff is exclusive: readings at 15:16
+belong to the next bin. Before 15:16, requests reuse the forecast with a 15:01
+cutoff. There is no background regeneration; the first request after a boundary
+recomputes the forecast. Later arrivals wait until the next refresh.
+
+Newer locations use all available history within that window, starting at their
+first observed bin. Internal gaps remain missing. Inference runs on CPU outside
+the async request loop. The model stays loaded and requests share cached
+computation. The cache also resets at local midnight so the new day's full
+horizon is available during 00:00–00:01. The final forecast interval is clipped
+at 23:59:59; API points never extend into tomorrow. This current-time forecast
+differs from the notebook's fixed 08:00 evaluation cutoff and unshifted bins.
 
 Locations with no valid reading in a completed 15-minute bin, or no valid reading
 within 30 minutes of the context cutoff, have `status: "unavailable"`, an
@@ -240,3 +249,10 @@ curl "http://localhost:8000/typical-week?location_id=262"
 | 265 | Wienerberg     |
 | 284 | St. Pölten     |
 | 1001 | Blockfabrik   |
+
+## Native Apple app
+
+The SwiftUI app, watch companion, and configurable WidgetKit widgets live in
+[`apple/`](apple/README.md). Open [`apple/Boulderbat.xcodeproj`](apple/Boulderbat.xcodeproj)
+to run on Mac, iPhone, iPad, Apple Watch, or Apple Vision Pro. Live cards and widgets
+combine current occupancy with recorded history, today’s forecast, and its 80% range.

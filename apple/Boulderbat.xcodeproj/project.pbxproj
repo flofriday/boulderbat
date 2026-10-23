@@ -1,0 +1,788 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		00779E819D59327BC548CAC4 /* App/BoulderbatApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4130FE14A592F285FD589B93 /* App/BoulderbatApp.swift */; };
+		00A81BB53C0C7D551AB4220D /* Shared/Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761E1B62E5DB0F2CDBC7FA30 /* Shared/Theme.swift */; };
+		0127D8050E7BB4D54BB46B7B /* Shared/API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CFC8C96E8FCDB5ABECD2F36 /* Shared/API.swift */; };
+		0C9DAFE55FD8466644C969B7 /* Shared/DemoData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DC3E2341CBEC7598080E5E6 /* Shared/DemoData.swift */; };
+		0F9067822C8B6315705DC4DC /* Shared/Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 644032F41F2325C223F95B82 /* Shared/Models.swift */; };
+		2043E119523774B387DDF80D /* Shared/CapacityWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01A3F1802DF4FCE29F4BF32 /* Shared/CapacityWidgetView.swift */; };
+		2490BF35D1A41CFFA9A79DC7 /* App/AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E45F754067C4A5CEF7AAB478 /* App/AppStore.swift */; };
+		2AFC8C20B4EA4530BAF93B82 /* Shared/Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761E1B62E5DB0F2CDBC7FA30 /* Shared/Theme.swift */; };
+		2B9F70C012260498F2FF2A45 /* Shared/Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761E1B62E5DB0F2CDBC7FA30 /* Shared/Theme.swift */; };
+		2FB3A27B77CD52AC2A212D35 /* App/HistoryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4B292339DF9072908FC9264 /* App/HistoryScreen.swift */; };
+		34D44DD8D8ED73EAB7D4EA42 /* Shared/Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761E1B62E5DB0F2CDBC7FA30 /* Shared/Theme.swift */; };
+		3A918096A7160FDDFA02F521 /* App/AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E45F754067C4A5CEF7AAB478 /* App/AppStore.swift */; };
+		3E5291D887639340910817E6 /* Shared/Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 644032F41F2325C223F95B82 /* Shared/Models.swift */; };
+		4389A9E8514B65720B948053 /* Shared/CapacityChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C65CF3FB108D4AAE0A54C /* Shared/CapacityChart.swift */; };
+		47272292B4DF5460011612D6 /* Shared/CapacityChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C65CF3FB108D4AAE0A54C /* Shared/CapacityChart.swift */; };
+		4902A115E32DB892FD398F9C /* Shared/API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CFC8C96E8FCDB5ABECD2F36 /* Shared/API.swift */; };
+		526E0BAD7242B64772BA4DB8 /* Shared/Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 644032F41F2325C223F95B82 /* Shared/Models.swift */; };
+		58DC229D05F317BE020E768B /* Shared/CapacityChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C65CF3FB108D4AAE0A54C /* Shared/CapacityChart.swift */; };
+		5D6BAAD695B76278EDA53F29 /* App/LiveScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF9836E3AAA84C1E5967E3D /* App/LiveScreen.swift */; };
+		5F0263693D7FA1EE7CD70B87 /* Resources/Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E0E27618A2D2A8FEBDD49F35 /* Resources/Assets.xcassets */; };
+		5F0F4260EA5EA63B162D476C /* Shared/API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CFC8C96E8FCDB5ABECD2F36 /* Shared/API.swift */; };
+		636FB37E33BB02D4200B743A /* Watch/BoulderbatWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C145A076921ACDC2E319594A /* Watch/BoulderbatWatchApp.swift */; };
+		723B773ADFB16DF04324B2E2 /* App/WidgetLayoutPreviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 071024038C2FF5B2F9934C48 /* App/WidgetLayoutPreviews.swift */; };
+		7395CD3B076723358C708BE0 /* BoulderbatWatch.app in Embed Watch App */ = {isa = PBXBuildFile; fileRef = 6FF54A9C7CC5332DE1B756A3 /* BoulderbatWatch.app */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		7C72A87802A9634B3FE08B33 /* Shared/DemoData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DC3E2341CBEC7598080E5E6 /* Shared/DemoData.swift */; };
+		7C9B3427FC58BEA45CB68EC5 /* Shared/CapacityWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01A3F1802DF4FCE29F4BF32 /* Shared/CapacityWidgetView.swift */; };
+		8A4023BF0F246D0CD32AA2EF /* Widgets/BoulderbatWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3399FFB7AEBB48040D687E5F /* Widgets/BoulderbatWidgets.swift */; };
+		9972255FD9B645129A1D43E1 /* BoulderbatWatchWidgets.appex in Embed Widget Extension */ = {isa = PBXBuildFile; fileRef = 78B2D1C1D5565843A467253F /* BoulderbatWatchWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		A2360DDC791BCF1179E688E5 /* Shared/Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 644032F41F2325C223F95B82 /* Shared/Models.swift */; };
+		A91B965A26C30B4184A516D8 /* Shared/DemoData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DC3E2341CBEC7598080E5E6 /* Shared/DemoData.swift */; };
+		A9BC03B8BE96AA88768C9880 /* Shared/CapacityWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01A3F1802DF4FCE29F4BF32 /* Shared/CapacityWidgetView.swift */; };
+		AAD81BCF9F67493CFBC3674C /* Resources/Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E0E27618A2D2A8FEBDD49F35 /* Resources/Assets.xcassets */; };
+		B4B26BA2988A178D639DD5F6 /* Shared/DemoData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DC3E2341CBEC7598080E5E6 /* Shared/DemoData.swift */; };
+		C07F8B6966EED7F73A50CE25 /* Widgets/BoulderbatWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3399FFB7AEBB48040D687E5F /* Widgets/BoulderbatWidgets.swift */; };
+		DCF13D28963AFB0991BAC224 /* Shared/API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CFC8C96E8FCDB5ABECD2F36 /* Shared/API.swift */; };
+		E12FBBB8A14A978A86C6BD35 /* Resources/Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E0E27618A2D2A8FEBDD49F35 /* Resources/Assets.xcassets */; };
+		E2124BE1C755C9ED4DCDB534 /* App/WeekScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA3F1573B552833C20DF5548 /* App/WeekScreen.swift */; };
+		E9B7AEDD3858B1D97505C110 /* Shared/CapacityChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C65CF3FB108D4AAE0A54C /* Shared/CapacityChart.swift */; };
+		EE35C4FF7AF05330C7B21D44 /* Resources/Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E0E27618A2D2A8FEBDD49F35 /* Resources/Assets.xcassets */; };
+		EF4DE04DDB107121391A1AC4 /* BoulderbatWidgets.appex in Embed Widget Extension */ = {isa = PBXBuildFile; fileRef = 1E1EF943165DC99D371DC28B /* BoulderbatWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		F5BB3156ADE72742D29AD6EC /* Shared/CapacityWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01A3F1802DF4FCE29F4BF32 /* Shared/CapacityWidgetView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		5C033E7F308BFC2E00FFF30D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 98F54143AB4E86B28C3AFEE0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 327F66FBEAB1816105DED360;
+			remoteInfo = BoulderbatWatchWidgets;
+		};
+		5C033E80308BFC2E00FFF30D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 98F54143AB4E86B28C3AFEE0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 95302641F35DB6A941795711;
+			remoteInfo = BoulderbatWidgets;
+		};
+		5C033E81308BFC2E00FFF30D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 98F54143AB4E86B28C3AFEE0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A0770E1D75CE444B786C5370;
+			remoteInfo = BoulderbatWatch;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		30148895E86F40F6538E3A26 /* Embed Widget Extension */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				9972255FD9B645129A1D43E1 /* BoulderbatWatchWidgets.appex in Embed Widget Extension */,
+			);
+			name = "Embed Widget Extension";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6B30BB221FD263831FCF5E79 /* Embed Watch App */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				7395CD3B076723358C708BE0 /* BoulderbatWatch.app in Embed Watch App */,
+			);
+			name = "Embed Watch App";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D8D816DCD7DD41EF09D6086D /* Embed Widget Extension */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				EF4DE04DDB107121391A1AC4 /* BoulderbatWidgets.appex in Embed Widget Extension */,
+			);
+			name = "Embed Widget Extension";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		071024038C2FF5B2F9934C48 /* App/WidgetLayoutPreviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/WidgetLayoutPreviews.swift; sourceTree = "<group>"; };
+		1E1EF943165DC99D371DC28B /* BoulderbatWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BoulderbatWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		3399FFB7AEBB48040D687E5F /* Widgets/BoulderbatWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Widgets/BoulderbatWidgets.swift; sourceTree = "<group>"; };
+		4130FE14A592F285FD589B93 /* App/BoulderbatApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/BoulderbatApp.swift; sourceTree = "<group>"; };
+		4E2D23C95FD1BAC4CED90CF4 /* Configuration/App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Configuration/App.entitlements; sourceTree = "<group>"; };
+		60A87AE48393CC5C4E6F5C7B /* Configuration/Widget-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Configuration/Widget-Info.plist"; sourceTree = "<group>"; };
+		644032F41F2325C223F95B82 /* Shared/Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/Models.swift; sourceTree = "<group>"; };
+		6FF54A9C7CC5332DE1B756A3 /* BoulderbatWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BoulderbatWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		761E1B62E5DB0F2CDBC7FA30 /* Shared/Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/Theme.swift; sourceTree = "<group>"; };
+		78B2D1C1D5565843A467253F /* BoulderbatWatchWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BoulderbatWatchWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		7CFC8C96E8FCDB5ABECD2F36 /* Shared/API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/API.swift; sourceTree = "<group>"; };
+		88AFE174F9288DAF4F8B6CBD /* Boulderbat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Boulderbat.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9DC3E2341CBEC7598080E5E6 /* Shared/DemoData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/DemoData.swift; sourceTree = "<group>"; };
+		A01A3F1802DF4FCE29F4BF32 /* Shared/CapacityWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/CapacityWidgetView.swift; sourceTree = "<group>"; };
+		C145A076921ACDC2E319594A /* Watch/BoulderbatWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Watch/BoulderbatWatchApp.swift; sourceTree = "<group>"; };
+		C4B292339DF9072908FC9264 /* App/HistoryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/HistoryScreen.swift; sourceTree = "<group>"; };
+		CE0C65CF3FB108D4AAE0A54C /* Shared/CapacityChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/CapacityChart.swift; sourceTree = "<group>"; };
+		CEF9836E3AAA84C1E5967E3D /* App/LiveScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/LiveScreen.swift; sourceTree = "<group>"; };
+		D082B96EDF2648A36B3A2AEB /* Configuration/Watch-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Configuration/Watch-Info.plist"; sourceTree = "<group>"; };
+		D437E45AA1DBB59470A7AE07 /* Configuration/App-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Configuration/App-Info.plist"; sourceTree = "<group>"; };
+		DA3F1573B552833C20DF5548 /* App/WeekScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/WeekScreen.swift; sourceTree = "<group>"; };
+		E0E27618A2D2A8FEBDD49F35 /* Resources/Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Resources/Assets.xcassets; sourceTree = "<group>"; };
+		E45F754067C4A5CEF7AAB478 /* App/AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/AppStore.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		6C54686F18C320C1C79B3F39 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		77C13796B1AF9E68DDB05C95 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8C975A890917D09066A54008 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9B4D41122697F9F9BA8766EE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		092F785130F95D4567887437 /* Watch */ = {
+			isa = PBXGroup;
+			children = (
+				C145A076921ACDC2E319594A /* Watch/BoulderbatWatchApp.swift */,
+			);
+			name = Watch;
+			sourceTree = "<group>";
+		};
+		1C48CE29E4E135EE62951B22 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				E45F754067C4A5CEF7AAB478 /* App/AppStore.swift */,
+				4130FE14A592F285FD589B93 /* App/BoulderbatApp.swift */,
+				C4B292339DF9072908FC9264 /* App/HistoryScreen.swift */,
+				CEF9836E3AAA84C1E5967E3D /* App/LiveScreen.swift */,
+				DA3F1573B552833C20DF5548 /* App/WeekScreen.swift */,
+				071024038C2FF5B2F9934C48 /* App/WidgetLayoutPreviews.swift */,
+			);
+			name = App;
+			sourceTree = "<group>";
+		};
+		44C7E229889FE9D1BB841A79 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				7CFC8C96E8FCDB5ABECD2F36 /* Shared/API.swift */,
+				CE0C65CF3FB108D4AAE0A54C /* Shared/CapacityChart.swift */,
+				A01A3F1802DF4FCE29F4BF32 /* Shared/CapacityWidgetView.swift */,
+				9DC3E2341CBEC7598080E5E6 /* Shared/DemoData.swift */,
+				644032F41F2325C223F95B82 /* Shared/Models.swift */,
+				761E1B62E5DB0F2CDBC7FA30 /* Shared/Theme.swift */,
+			);
+			name = Shared;
+			sourceTree = "<group>";
+		};
+		5151B46607EBC8890D8DFCC2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				88AFE174F9288DAF4F8B6CBD /* Boulderbat.app */,
+				1E1EF943165DC99D371DC28B /* BoulderbatWidgets.appex */,
+				6FF54A9C7CC5332DE1B756A3 /* BoulderbatWatch.app */,
+				78B2D1C1D5565843A467253F /* BoulderbatWatchWidgets.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		931BAC40E0989DC841B8C1D2 = {
+			isa = PBXGroup;
+			children = (
+				44C7E229889FE9D1BB841A79 /* Shared */,
+				1C48CE29E4E135EE62951B22 /* App */,
+				995970CB671B0CE5E9E49FB7 /* Widgets */,
+				092F785130F95D4567887437 /* Watch */,
+				A024F06580C79B7582C3806A /* Resources */,
+				C23108729D1809B8323E9806 /* Configuration */,
+				5151B46607EBC8890D8DFCC2 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		995970CB671B0CE5E9E49FB7 /* Widgets */ = {
+			isa = PBXGroup;
+			children = (
+				3399FFB7AEBB48040D687E5F /* Widgets/BoulderbatWidgets.swift */,
+			);
+			name = Widgets;
+			sourceTree = "<group>";
+		};
+		A024F06580C79B7582C3806A /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				E0E27618A2D2A8FEBDD49F35 /* Resources/Assets.xcassets */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		C23108729D1809B8323E9806 /* Configuration */ = {
+			isa = PBXGroup;
+			children = (
+				D437E45AA1DBB59470A7AE07 /* Configuration/App-Info.plist */,
+				4E2D23C95FD1BAC4CED90CF4 /* Configuration/App.entitlements */,
+				D082B96EDF2648A36B3A2AEB /* Configuration/Watch-Info.plist */,
+				60A87AE48393CC5C4E6F5C7B /* Configuration/Widget-Info.plist */,
+			);
+			name = Configuration;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		327F66FBEAB1816105DED360 /* BoulderbatWatchWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A04E095352F5113663724AAC /* Build configuration list for PBXNativeTarget "BoulderbatWatchWidgets" */;
+			buildPhases = (
+				E6DF668AADC2A9E41BFAEC41 /* Sources */,
+				77C13796B1AF9E68DDB05C95 /* Frameworks */,
+				B62FEECB0A8E3C97982B5758 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BoulderbatWatchWidgets;
+			productName = BoulderbatWatchWidgets;
+			productReference = 78B2D1C1D5565843A467253F /* BoulderbatWatchWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		95302641F35DB6A941795711 /* BoulderbatWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4002418155AE5349291A4495 /* Build configuration list for PBXNativeTarget "BoulderbatWidgets" */;
+			buildPhases = (
+				9EFA12134C164246D32AF049 /* Sources */,
+				6C54686F18C320C1C79B3F39 /* Frameworks */,
+				8E619BEB6599CED8B9899ABE /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BoulderbatWidgets;
+			productName = BoulderbatWidgets;
+			productReference = 1E1EF943165DC99D371DC28B /* BoulderbatWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		A0770E1D75CE444B786C5370 /* BoulderbatWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 29C48AA91D0FF7950B5ABAE5 /* Build configuration list for PBXNativeTarget "BoulderbatWatch" */;
+			buildPhases = (
+				3528EBCE56B6E6726C8578AF /* Sources */,
+				8C975A890917D09066A54008 /* Frameworks */,
+				4B1A7D60AB7F81DBEE3730CD /* Resources */,
+				30148895E86F40F6538E3A26 /* Embed Widget Extension */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C310C4B0410A8E8C7850A1AC /* PBXTargetDependency */,
+			);
+			name = BoulderbatWatch;
+			productName = BoulderbatWatch;
+			productReference = 6FF54A9C7CC5332DE1B756A3 /* BoulderbatWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
+		C2C29E14738B2ABD9F345066 /* Boulderbat */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 29203CF66F91A85E8444BD9E /* Build configuration list for PBXNativeTarget "Boulderbat" */;
+			buildPhases = (
+				A521EC5633945AF7A4F95004 /* Sources */,
+				9B4D41122697F9F9BA8766EE /* Frameworks */,
+				44BCC881DE71B409D3E01373 /* Resources */,
+				D8D816DCD7DD41EF09D6086D /* Embed Widget Extension */,
+				6B30BB221FD263831FCF5E79 /* Embed Watch App */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3BFB70C100D7A39930CFBDD1 /* PBXTargetDependency */,
+				CEF1A154918FAD736563FEFF /* PBXTargetDependency */,
+			);
+			name = Boulderbat;
+			productName = Boulderbat;
+			productReference = 88AFE174F9288DAF4F8B6CBD /* Boulderbat.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		98F54143AB4E86B28C3AFEE0 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2700;
+			};
+			buildConfigurationList = 247BF104A9AD002C539DA531 /* Build configuration list for PBXProject "Boulderbat" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 931BAC40E0989DC841B8C1D2;
+			productRefGroup = 5151B46607EBC8890D8DFCC2 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				C2C29E14738B2ABD9F345066 /* Boulderbat */,
+				95302641F35DB6A941795711 /* BoulderbatWidgets */,
+				A0770E1D75CE444B786C5370 /* BoulderbatWatch */,
+				327F66FBEAB1816105DED360 /* BoulderbatWatchWidgets */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		44BCC881DE71B409D3E01373 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EE35C4FF7AF05330C7B21D44 /* Resources/Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4B1A7D60AB7F81DBEE3730CD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AAD81BCF9F67493CFBC3674C /* Resources/Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8E619BEB6599CED8B9899ABE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5F0263693D7FA1EE7CD70B87 /* Resources/Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B62FEECB0A8E3C97982B5758 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E12FBBB8A14A978A86C6BD35 /* Resources/Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		3528EBCE56B6E6726C8578AF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4902A115E32DB892FD398F9C /* Shared/API.swift in Sources */,
+				E9B7AEDD3858B1D97505C110 /* Shared/CapacityChart.swift in Sources */,
+				F5BB3156ADE72742D29AD6EC /* Shared/CapacityWidgetView.swift in Sources */,
+				B4B26BA2988A178D639DD5F6 /* Shared/DemoData.swift in Sources */,
+				526E0BAD7242B64772BA4DB8 /* Shared/Models.swift in Sources */,
+				00A81BB53C0C7D551AB4220D /* Shared/Theme.swift in Sources */,
+				636FB37E33BB02D4200B743A /* Watch/BoulderbatWatchApp.swift in Sources */,
+				3A918096A7160FDDFA02F521 /* App/AppStore.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9EFA12134C164246D32AF049 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0127D8050E7BB4D54BB46B7B /* Shared/API.swift in Sources */,
+				4389A9E8514B65720B948053 /* Shared/CapacityChart.swift in Sources */,
+				A9BC03B8BE96AA88768C9880 /* Shared/CapacityWidgetView.swift in Sources */,
+				0C9DAFE55FD8466644C969B7 /* Shared/DemoData.swift in Sources */,
+				A2360DDC791BCF1179E688E5 /* Shared/Models.swift in Sources */,
+				2AFC8C20B4EA4530BAF93B82 /* Shared/Theme.swift in Sources */,
+				C07F8B6966EED7F73A50CE25 /* Widgets/BoulderbatWidgets.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A521EC5633945AF7A4F95004 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5F0F4260EA5EA63B162D476C /* Shared/API.swift in Sources */,
+				47272292B4DF5460011612D6 /* Shared/CapacityChart.swift in Sources */,
+				7C9B3427FC58BEA45CB68EC5 /* Shared/CapacityWidgetView.swift in Sources */,
+				A91B965A26C30B4184A516D8 /* Shared/DemoData.swift in Sources */,
+				0F9067822C8B6315705DC4DC /* Shared/Models.swift in Sources */,
+				2B9F70C012260498F2FF2A45 /* Shared/Theme.swift in Sources */,
+				2490BF35D1A41CFFA9A79DC7 /* App/AppStore.swift in Sources */,
+				00779E819D59327BC548CAC4 /* App/BoulderbatApp.swift in Sources */,
+				2FB3A27B77CD52AC2A212D35 /* App/HistoryScreen.swift in Sources */,
+				5D6BAAD695B76278EDA53F29 /* App/LiveScreen.swift in Sources */,
+				E2124BE1C755C9ED4DCDB534 /* App/WeekScreen.swift in Sources */,
+				723B773ADFB16DF04324B2E2 /* App/WidgetLayoutPreviews.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E6DF668AADC2A9E41BFAEC41 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DCF13D28963AFB0991BAC224 /* Shared/API.swift in Sources */,
+				58DC229D05F317BE020E768B /* Shared/CapacityChart.swift in Sources */,
+				2043E119523774B387DDF80D /* Shared/CapacityWidgetView.swift in Sources */,
+				7C72A87802A9634B3FE08B33 /* Shared/DemoData.swift in Sources */,
+				3E5291D887639340910817E6 /* Shared/Models.swift in Sources */,
+				34D44DD8D8ED73EAB7D4EA42 /* Shared/Theme.swift in Sources */,
+				8A4023BF0F246D0CD32AA2EF /* Widgets/BoulderbatWidgets.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		3BFB70C100D7A39930CFBDD1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 95302641F35DB6A941795711 /* BoulderbatWidgets */;
+			targetProxy = 5C033E80308BFC2E00FFF30D /* PBXContainerItemProxy */;
+		};
+		C310C4B0410A8E8C7850A1AC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 327F66FBEAB1816105DED360 /* BoulderbatWatchWidgets */;
+			targetProxy = 5C033E7F308BFC2E00FFF30D /* PBXContainerItemProxy */;
+		};
+		CEF1A154918FAD736563FEFF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			platformFilter = ios;
+			target = A0770E1D75CE444B786C5370 /* BoulderbatWatch */;
+			targetProxy = 5C033E81308BFC2E00FFF30D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		1753221FF6F123F46052228C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "";
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = Configuration/App.entitlements;
+				CURRENT_PROJECT_VERSION = 5;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = "Configuration/Widget-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BOULDERBAT_APP_BUNDLE_IDENTIFIER).watch.widgets";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Release;
+		};
+		262E02E3C63E2FBADCBCB6A2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				BOULDERBAT_APP_BUNDLE_IDENTIFIER = dev.flofriday.boulderbat.debug;
+				BOULDERBAT_URL_SCHEME = "boulderbat-debug";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 4;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+				XROS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Debug;
+		};
+		5AA5D5D708D3AF2F1DD47A43 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "";
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = Configuration/App.entitlements;
+				CURRENT_PROJECT_VERSION = 5;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = "Configuration/Widget-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BOULDERBAT_APP_BUNDLE_IDENTIFIER).widgets";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+			};
+			name = Debug;
+		};
+		765F63C1D2C5147A8F64C5D3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "";
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = Configuration/App.entitlements;
+				CURRENT_PROJECT_VERSION = 5;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = "Configuration/Widget-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BOULDERBAT_APP_BUNDLE_IDENTIFIER).watch.widgets";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Debug;
+		};
+		86E0D76135EE80816AB07AC0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				BOULDERBAT_APP_BUNDLE_IDENTIFIER = dev.flofriday.boulderbat;
+				BOULDERBAT_URL_SCHEME = boulderbat;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 4;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+				XROS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Release;
+		};
+		B268FE2757063EB7D56D69E5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = Configuration/App.entitlements;
+				CURRENT_PROJECT_VERSION = 5;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = "Configuration/App-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BOULDERBAT_APP_BUNDLE_IDENTIFIER)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+			};
+			name = Release;
+		};
+		B632FD24C1074FFD40A4034F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = Configuration/App.entitlements;
+				CURRENT_PROJECT_VERSION = 5;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = "Configuration/Watch-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BOULDERBAT_APP_BUNDLE_IDENTIFIER).watch";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Release;
+		};
+		BF94C8674AC1BB20D27BEB5A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "";
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = Configuration/App.entitlements;
+				CURRENT_PROJECT_VERSION = 5;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = "Configuration/Widget-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BOULDERBAT_APP_BUNDLE_IDENTIFIER).widgets";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+			};
+			name = Release;
+		};
+		C55E9F310478D01E4CCFBC9A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = Configuration/App.entitlements;
+				CURRENT_PROJECT_VERSION = 5;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = "Configuration/App-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BOULDERBAT_APP_BUNDLE_IDENTIFIER)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+			};
+			name = Debug;
+		};
+		ECE8DCF6BD3C1C64C97594E2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = Configuration/App.entitlements;
+				CURRENT_PROJECT_VERSION = 5;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = "Configuration/Watch-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BOULDERBAT_APP_BUNDLE_IDENTIFIER).watch";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		247BF104A9AD002C539DA531 /* Build configuration list for PBXProject "Boulderbat" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				262E02E3C63E2FBADCBCB6A2 /* Debug */,
+				86E0D76135EE80816AB07AC0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		29203CF66F91A85E8444BD9E /* Build configuration list for PBXNativeTarget "Boulderbat" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C55E9F310478D01E4CCFBC9A /* Debug */,
+				B268FE2757063EB7D56D69E5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		29C48AA91D0FF7950B5ABAE5 /* Build configuration list for PBXNativeTarget "BoulderbatWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ECE8DCF6BD3C1C64C97594E2 /* Debug */,
+				B632FD24C1074FFD40A4034F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4002418155AE5349291A4495 /* Build configuration list for PBXNativeTarget "BoulderbatWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5AA5D5D708D3AF2F1DD47A43 /* Debug */,
+				BF94C8674AC1BB20D27BEB5A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A04E095352F5113663724AAC /* Build configuration list for PBXNativeTarget "BoulderbatWatchWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				765F63C1D2C5147A8F64C5D3 /* Debug */,
+				1753221FF6F123F46052228C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 98F54143AB4E86B28C3AFEE0 /* Project object */;
+}

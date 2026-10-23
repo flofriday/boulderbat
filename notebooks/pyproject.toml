@@ -1,0 +1,19 @@
+[project]
+name = "boulderbat-forecast-benchmark"
+version = "0.1.0"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "huggingface-hub>=0.35",
+    "ipykernel>=6.30",
+    "jupyterlab>=4.4",
+    "matplotlib>=3.10",
+    "nbclient>=0.10",
+    "nbformat>=5.10",
+    "numpy>=2.2",
+    "pandas>=2.3,<3",
+    "timestral",
+    "torch>=2.4",
+]
+
+[tool.uv.sources]
+timestral = { git = "https://github.com/mistralai/timestral.git", rev = "a534bdbd244d64f3d9d743f46c7bf6fc330ed4ff" }

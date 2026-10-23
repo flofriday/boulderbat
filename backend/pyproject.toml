@@ -8,7 +8,19 @@ dependencies = [
     "apscheduler>=3.10",
     "aiosqlite>=0.20",
     "aiofiles>=24.0",
+    "numpy>=2.2",
+    "timestral",
+    "torch>=2.4",
 ]
+
+[tool.uv.sources]
+timestral = { git = "https://github.com/mistralai/timestral.git", rev = "a534bdbd244d64f3d9d743f46c7bf6fc330ed4ff" }
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [build-system]
 requires = ["hatchling"]

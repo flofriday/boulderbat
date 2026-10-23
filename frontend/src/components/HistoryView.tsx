@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts"
+import { ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, ReferenceLine } from "recharts"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Button } from "@/components/ui/button"
 import { searchParams, updateUrl } from "@/lib/url-state"
+import { chartData, dayRange, HISTORY_TIMEZONE, shiftDate, validDay, viennaDay } from "@/lib/history-chart"
+import type { PredictionResponse, Reading } from "@/lib/history-chart"
 
 // `label` must match the `title` returned by the API — lines are keyed by title.
 const GYMS = [
@@ -18,67 +20,25 @@ const GYMS = [
   { id: "261", label: "Salzburg", color: "hsl(var(--chart-2))" },
 ]
 
-const DAY_START_HOUR = 8
-const DAY_RANGE_LABEL = "08:00–00:00"
-
 // Quick-select presets shown as chips alongside the individual gyms.
 const PRESETS = [
   { id: "all", label: "All", ids: GYMS.map(g => g.id) },
   { id: "wien", label: "Wien", ids: ["262", "263", "264", "265", "1001"] },
 ]
 
-const CHART_CONFIG = Object.fromEntries(GYMS.map(g => [g.label, { label: g.label, color: g.color }]))
-
-// Polling cadence is 5 min — break the line if there's a > 15 min gap.
-const GAP_THRESHOLD_MS = 15 * 60 * 1000
-
-interface Reading {
-  location_id: number
-  title: string
-  capacity: number
-  recorded_at: string
-}
-
-interface ChartPoint {
-  ts: number
-  [key: string]: number | null
-}
-
-function buildChartData(readings: Reading[], selectedIds: Set<string>): { data: ChartPoint[]; keys: string[] } {
-  const keys = GYMS.filter(g => selectedIds.has(g.id)).map(g => g.label)
-  const byTime: Record<string, ChartPoint> = {}
-
-  for (const r of readings) {
-    if (!selectedIds.has(String(r.location_id))) continue
-    const ts = new Date(r.recorded_at).getTime()
-    if (!byTime[r.recorded_at]) byTime[r.recorded_at] = { ts }
-    byTime[r.recorded_at][r.title] = r.capacity
-  }
-
-  const sorted = Object.values(byTime).sort((a, b) => a.ts - b.ts)
-
-  const withGaps: ChartPoint[] = []
-  for (let i = 0; i < sorted.length; i++) {
-    withGaps.push(sorted[i])
-    const next = sorted[i + 1]
-    if (next && next.ts - sorted[i].ts > GAP_THRESHOLD_MS) {
-      const nullPoint: ChartPoint = { ts: sorted[i].ts + 1 }
-      for (const k of keys) nullPoint[k] = null
-      withGaps.push(nullPoint)
-    }
-  }
-
-  return { data: withGaps, keys }
-}
+const CHART_CONFIG = Object.fromEntries(GYMS.flatMap(g => [
+  [`observed_${g.id}`, { label: `${g.label} · recorded`, color: g.color }],
+  [`prediction_${g.id}`, { label: `${g.label} · predicted`, color: g.color, rangeKey: `uncertainty_${g.id}` }],
+]))
 
 function formatTick(ts: number) {
   const d = new Date(ts)
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })
+  return d.toLocaleTimeString([], { timeZone: HISTORY_TIMEZONE, hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
 }
 
 function formatTooltipLabel(ts: string | number) {
   return new Date(Number(ts)).toLocaleString([], {
-    month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false,
+    timeZone: HISTORY_TIMEZONE, month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
   })
 }
 
@@ -86,40 +46,19 @@ function selectionEquals(selected: Set<string>, ids: string[]) {
   return selected.size === ids.length && ids.every(id => selected.has(id))
 }
 
-function toDateValue(date: Date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const day = String(date.getDate()).padStart(2, "0")
-  return `${year}-${month}-${day}`
-}
-
 function dateFromValue(value: string) {
-  const [year, month, day] = value.split("-").map(Number)
-  return new Date(year, month - 1, day)
-}
-
-function shiftDate(value: string, days: number) {
-  const date = dateFromValue(value)
-  date.setDate(date.getDate() + days)
-  return toDateValue(date)
-}
-
-function dayRange(value: string) {
-  const date = dateFromValue(value)
-  const start = new Date(date.getFullYear(), date.getMonth(), date.getDate(), DAY_START_HOUR)
-  const end = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1)
-  return { start, end }
+  return new Date(`${value}T12:00:00Z`)
 }
 
 function formatDayLabel(value: string, today: string) {
   if (value === today) return "Today"
   if (value === shiftDate(today, -1)) return "Yesterday"
-  return dateFromValue(value).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })
+  return dateFromValue(value).toLocaleDateString([], { timeZone: HISTORY_TIMEZONE, weekday: "short", month: "short", day: "numeric" })
 }
 
 function dayFromUrl(today: string) {
   const value = searchParams().get("d") ?? searchParams().get("date")
-  if (!value || value > today || Number.isNaN(dateFromValue(value).getTime())) return today
+  if (!value || value > today || !validDay(value)) return today
   return value
 }
 
@@ -132,16 +71,34 @@ function gymIdsFromUrl() {
 }
 
 export function HistoryView() {
-  const [today] = useState(() => toDateValue(new Date()))
-  const [selectedDay, setSelectedDay] = useState(() => dayFromUrl(today))
+  const [now, setNow] = useState(() => new Date())
+  const today = viennaDay(now)
+  // null follows today across midnight, while a deliberately selected historical day stays put.
+  const [dateSelection, setDateSelection] = useState<string | null>(() => {
+    const day = dayFromUrl(today)
+    return day === today ? null : day
+  })
+  const selectedDay = dateSelection ?? today
   const [selectedIds, setSelectedIds] = useState<Set<string>>(gymIdsFromUrl)
   const [readings, setReadings] = useState<Reading[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [forecastState, setForecastState] = useState<{
+    day: string; data?: PredictionResponse; error?: string; loading: boolean
+  } | null>(null)
 
   const { start, end } = useMemo(() => dayRange(selectedDay), [selectedDay])
   const selectedDayLabel = formatDayLabel(selectedDay, today)
   const allSelected = selectedIds.size === GYMS.length
+  const isToday = selectedDay === today
+  const forecast = isToday && forecastState?.day === today ? forecastState : null
+  const prediction = forecast?.data?.date === today ? forecast.data : undefined
+  const selectedGyms = GYMS.filter(g => selectedIds.has(g.id))
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setNow(new Date()), 30_000)
+    return () => window.clearInterval(interval)
+  }, [])
 
   useEffect(() => {
     const params = searchParams()
@@ -165,8 +122,8 @@ export function HistoryView() {
     const syncSelection = () => {
       const nextDay = dayFromUrl(today)
       const nextIds = gymIdsFromUrl()
-      setLoading(true)
-      setSelectedDay(current => current === nextDay ? current : nextDay)
+      if (nextDay !== selectedDay) setLoading(true)
+      setDateSelection(nextDay === today ? null : nextDay)
       setSelectedIds(current => selectionEquals(current, [...nextIds]) ? current : nextIds)
     }
     window.addEventListener("popstate", syncSelection)
@@ -174,26 +131,52 @@ export function HistoryView() {
   }, [allSelected, selectedDay, selectedIds, today])
 
   useEffect(() => {
-    let cancelled = false
+    const controller = new AbortController()
     const fmt = (d: Date) => d.toISOString().replace(".000", "")
     const params = new URLSearchParams({ start: fmt(start), end: fmt(end) })
 
-    fetch(`/history?${params}`)
+    function refreshHistory() {
+      fetch(`/history?${params}`, { signal: controller.signal })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
       .then(d => {
-        if (cancelled) return
+        if (controller.signal.aborted) return
         setReadings(d)
         setError(null)
       })
       .catch(e => {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to fetch")
+        if (!controller.signal.aborted) setError(e instanceof Error ? e.message : "Failed to fetch")
       })
-      .finally(() => { if (!cancelled) setLoading(false) })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false) })
+    }
+    refreshHistory()
+    const interval = isToday ? window.setInterval(refreshHistory, 60_000) : undefined
 
-    return () => { cancelled = true }
-  }, [start, end])
+    return () => { controller.abort(); window.clearInterval(interval) }
+  }, [start, end, isToday])
 
-  const { data, keys } = useMemo(() => buildChartData(readings, selectedIds), [readings, selectedIds])
+  useEffect(() => {
+    if (!isToday) return
+    const controller = new AbortController()
+    async function refreshPrediction() {
+      setForecastState(current => ({ day: selectedDay, data: current?.day === selectedDay ? current.data : undefined, loading: true }))
+      try {
+        const response = await fetch("/prediction", { signal: controller.signal })
+        if (!response.ok) throw new Error("Today's prediction is temporarily unavailable.")
+        const data: PredictionResponse = await response.json()
+        if (!controller.signal.aborted) setForecastState({ day: selectedDay, data, loading: false })
+      } catch (error) {
+        if (!controller.signal.aborted) setForecastState({ day: selectedDay, error: error instanceof Error ? error.message : "Could not load prediction.", loading: false })
+      }
+    }
+    const initial = window.setTimeout(() => { void refreshPrediction() }, 0)
+    const interval = window.setInterval(() => { void refreshPrediction() }, 60_000)
+    return () => { controller.abort(); window.clearTimeout(initial); window.clearInterval(interval) }
+  }, [isToday, selectedDay])
+
+  const { data, observed, future, connectors, lastReading } = useMemo(() => chartData(readings, prediction, selectedIds), [readings, prediction, selectedIds])
+  const unavailable = prediction?.locations.filter(location => selectedIds.has(String(location.location_id)) && location.status === "unavailable") ?? []
+  const forecastStart = prediction ? Math.max(lastReading ?? Date.parse(prediction.generated_at), start.getTime()) : 0
+  const hasPrediction = future.length > 0
 
   function toggle(id: string) {
     // From the "all" state, a click isolates to just that gym.
@@ -213,9 +196,9 @@ export function HistoryView() {
   }
 
   function selectDay(day: string) {
-    if (day === selectedDay) return
+    if (!validDay(day) || day > today || day === selectedDay) return
     setLoading(true)
-    setSelectedDay(day)
+    setDateSelection(day === today ? null : day)
     updateUrl({ d: day })
   }
 
@@ -309,26 +292,23 @@ export function HistoryView() {
       </div>
 
       <Card>
-        <CardHeader className="px-4 sm:px-6">
-          <CardTitle className="text-base">
-            {allSelected ? "All gyms" : `${selectedIds.size} gym${selectedIds.size === 1 ? "" : "s"}`} — {selectedDayLabel}, {DAY_RANGE_LABEL}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-2 sm:px-6">
+        <CardContent className="px-2 py-3 sm:px-3">
           {loading && <p className="text-sm text-muted-foreground py-12 text-center">Loading…</p>}
           {error && <p className="text-sm text-destructive py-12 text-center">Error: {error}</p>}
           {!loading && !error && data.length === 0 && (
             <p className="text-sm text-muted-foreground py-12 text-center">No data for this range.</p>
           )}
           {!loading && !error && data.length > 0 && (
-            <ChartContainer config={CHART_CONFIG} className="h-72 w-full">
-              <LineChart data={data} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+            <ChartContainer config={CHART_CONFIG} className="h-80 w-full sm:h-96" aria-label={isToday ? "Occupancy chart: solid lines are recorded, dashed lines are predicted, colored bands show the 80% prediction range" : "Recorded occupancy chart"}>
+              <ComposedChart data={data} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis
                   dataKey="ts"
                   type="number"
                   scale="time"
                   domain={[start.getTime(), end.getTime()]}
+                  ticks={[0, 4, 8, 12, 16].map(hour => start.getTime() + hour * 60 * 60 * 1000)}
+                  allowDataOverflow
                   tickFormatter={formatTick}
                   tick={{ fontSize: 11 }}
                   tickLine={false}
@@ -343,19 +323,53 @@ export function HistoryView() {
                   axisLine={false}
                 />
                 <ChartTooltip content={<ChartTooltipContent labelFormatter={formatTooltipLabel} />} />
-                {keys.map(key => (
+                {selectedGyms.map(gym => (
+                  <Area key={`uncertainty_${gym.id}`} data={future} type="monotone"
+                    dataKey={`uncertainty_${gym.id}`} stroke="none" fill={gym.color}
+                    fillOpacity={selectedGyms.length === 1 ? 0.16 : selectedGyms.length <= 3 ? 0.1 : 0.06}
+                    tooltipType="none" activeDot={false} isAnimationActive={false} />
+                ))}
+                {hasPrediction && forecastStart > start.getTime() && <ReferenceLine x={forecastStart} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" label={{ value: "Now", position: "insideTopLeft", fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />}
+                {connectors.map(connector => (
+                  <Line key={`connector_${connector.location_id}`} data={connector.data} type="linear"
+                    dataKey="capacity" stroke={GYMS.find(gym => gym.id === String(connector.location_id))?.color}
+                    strokeWidth={2} strokeDasharray="6 4" dot={false} activeDot={false}
+                    tooltipType="none" isAnimationActive={false} />
+                ))}
+                {selectedGyms.map(gym => (
                   <Line
-                    key={key}
+                    key={`observed_${gym.id}`}
+                    data={observed}
                     type="monotone"
-                    dataKey={key}
-                    stroke={CHART_CONFIG[key]?.color}
+                    dataKey={`observed_${gym.id}`}
+                    stroke={gym.color}
                     strokeWidth={2}
                     dot={false}
+                    isAnimationActive={false}
                   />
                 ))}
-              </LineChart>
+                {selectedGyms.map(gym => (
+                  <Line key={`prediction_${gym.id}`} data={future} type="monotone"
+                    dataKey={`prediction_${gym.id}`} stroke={gym.color} strokeWidth={2}
+                    strokeDasharray="6 4" dot={false} isAnimationActive={false} />
+                ))}
+              </ComposedChart>
             </ChartContainer>
           )}
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 px-2 pt-2 text-xs text-muted-foreground sm:px-0">
+            <span className="inline-flex items-center gap-2"><span className="w-6 border-t-2 border-foreground/60" />Recorded</span>
+            {isToday && <span className="inline-flex items-center gap-2"><span className="w-6 border-t-2 border-dashed border-foreground/60" />Predicted · until midnight</span>}
+            {isToday && <span className="inline-flex items-center gap-2" title="The model's 10th–90th percentile prediction interval">
+              <span className="h-3 w-6 rounded-sm opacity-20" style={{ backgroundColor: selectedGyms.length === 1 ? selectedGyms[0].color : "hsl(var(--muted-foreground))" }} />80% range
+            </span>}
+            {isToday && <span className="sm:ml-auto" role="status">
+              {forecast?.loading || !forecast ? "Updating prediction…" : prediction && hasPrediction ? `Updated ${formatTick(Date.parse(prediction.generated_at))}` : ""}
+            </span>}
+          </div>
+          {isToday && forecast?.error && <p className="px-2 pb-3 text-sm text-muted-foreground" role="status">{forecast.error} You can still browse recorded history.</p>}
+          {isToday && unavailable.length > 0 && <div className="space-y-1 px-2 pb-3 text-xs text-muted-foreground" role="status">
+            {unavailable.map(location => <p key={location.location_id}>{location.title}: {location.reason}</p>)}
+          </div>}
         </CardContent>
       </Card>
     </div>

@@ -2,7 +2,7 @@ import * as React from "react"
 import { ResponsiveContainer, Tooltip } from "recharts"
 import { cn } from "@/lib/utils"
 
-export type ChartConfig = Record<string, { label?: string; color?: string }>
+export type ChartConfig = Record<string, { label?: string; color?: string; rangeKey?: string }>
 
 type ChartContextProps = { config: ChartConfig }
 const ChartContext = React.createContext<ChartContextProps | null>(null)
@@ -62,6 +62,7 @@ function ChartStyle({ id, config }: { id: string; config: ChartConfig }) {
 export const ChartTooltip = Tooltip
 
 interface TooltipPayloadItem {
+  type?: string
   name?: string
   dataKey?: string
   value?: number | string
@@ -79,7 +80,8 @@ interface ChartTooltipContentProps {
 
 export function ChartTooltipContent({ active, payload, label, className, labelFormatter }: ChartTooltipContentProps) {
   const { config } = useChart()
-  if (!active || !payload?.length) return null
+  const visiblePayload = payload?.filter(item => item.type !== "none")
+  if (!active || !visiblePayload?.length) return null
 
   const formattedLabel = label !== undefined ? (labelFormatter ? labelFormatter(label) : label) : null
 
@@ -87,17 +89,22 @@ export function ChartTooltipContent({ active, payload, label, className, labelFo
     <div className={cn("grid min-w-[8rem] gap-1.5 rounded-lg border bg-background px-2.5 py-1.5 text-xs shadow-xl", className)}>
       {formattedLabel !== null && <div className="font-medium">{formattedLabel}</div>}
       <div className="grid gap-1">
-        {payload.map((item, i) => {
+        {visiblePayload.map((item, i) => {
           const key = String(item.name || item.dataKey || "value")
           const cfg = config[key]
+          const range = cfg?.rangeKey ? item.payload?.[cfg.rangeKey] : undefined
+          const bounds = Array.isArray(range) && range.length === 2 && range.every(value => typeof value === "number") ? range as number[] : null
           return (
-            <div key={i} className="flex items-center gap-2">
-              <span
-                className="h-2 w-2 shrink-0 rounded-full"
-                style={{ backgroundColor: item.color }}
-              />
-              <span className="text-muted-foreground">{cfg?.label ?? key}</span>
-              <span className="ml-auto font-mono tabular-nums text-foreground">{item.value}%</span>
+            <div key={i} className="grid gap-0.5">
+              <div className="flex items-center gap-2">
+                <span
+                  className="h-2 w-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: item.color }}
+                />
+                <span className="text-muted-foreground">{cfg?.label ?? key}</span>
+                <span className="ml-auto font-mono tabular-nums text-foreground">{typeof item.value === "number" ? item.value.toLocaleString(undefined, { maximumFractionDigits: 1 }) : item.value}%</span>
+              </div>
+              {bounds && <div className="pl-4 text-muted-foreground">80% range: {bounds.map(value => value.toLocaleString(undefined, { maximumFractionDigits: 1 })).join("–")}%</div>}
             </div>
           )
         })}

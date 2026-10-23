@@ -163,3 +163,22 @@ async def get_typical_week(location_id: int) -> dict:
         ],
         "week_count": len(weeks),
     }
+
+
+async def get_prediction_history(start: str, end: str) -> tuple[list[dict], list[dict]]:
+    """Read the forecast context with an exclusive cutoff; never include future data."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cursor = await db.execute("""
+            SELECT l.id, l.title, MIN(r.recorded_at) AS first_recorded_at
+            FROM locations l LEFT JOIN readings r ON r.location_id = l.id
+            GROUP BY l.id ORDER BY l.title
+        """)
+        locations = [dict(row) for row in await cursor.fetchall()]
+        cursor = await db.execute("""
+            SELECT location_id, capacity, recorded_at FROM readings
+            WHERE recorded_at >= ? AND recorded_at < ?
+            ORDER BY location_id, recorded_at
+        """, (start, end))
+        readings = [dict(row) for row in await cursor.fetchall()]
+    return locations, readings

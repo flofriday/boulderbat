@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 MODEL = "mistralai/Timestral-5M"
 MODEL_REVISION = "bdd20cfc15a3fea0e4cb5ccef37f8d3ca7aa335f"
 STEP_SECONDS = 15 * 60
+BIN_OFFSET_SECONDS = 60
 
 
 def utc_string(value: datetime) -> str:
@@ -28,9 +29,14 @@ def current_time() -> datetime:
 def day_bounds(now: datetime):
     local = now.astimezone(VIENNA_TIMEZONE)
     midnight = (local + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
-    origin = datetime.fromtimestamp(int(now.timestamp()) // STEP_SECONDS * STEP_SECONDS, timezone.utc)
+    # Shift the entire grid, so e.g. the bin ending at 15:16 includes 15:15
+    # readings. Requests before 15:16 keep the forecast with a 15:01 cutoff.
+    cutoff = (int(now.timestamp()) - BIN_OFFSET_SECONDS) // STEP_SECONDS * STEP_SECONDS + BIN_OFFSET_SECONDS
+    origin = datetime.fromtimestamp(cutoff, timezone.utc)
     history_start = (origin.astimezone(VIENNA_TIMEZONE) - timedelta(weeks=8)).astimezone(timezone.utc)
-    horizon = int((midnight.astimezone(timezone.utc) - origin).total_seconds()) // STEP_SECONDS
+    # The final shifted bin straddles midnight; include it, then clip API points
+    # to today. Otherwise the final 14 minutes would reuse the preceding bin.
+    horizon = math.ceil((midnight.astimezone(timezone.utc) - origin).total_seconds() / STEP_SECONDS)
     return origin, history_start, midnight.astimezone(timezone.utc), horizon
 
 
@@ -115,7 +121,9 @@ class PredictionService:
             # Read the clock after acquiring the lock, including during midnight rollover.
             now = current_time()
             origin, history_start, midnight, horizon = day_bounds(now)
-            key = utc_string(origin)
+            # During 00:00–00:01 the cutoff is still yesterday's 23:46. Include
+            # today's end in the key so yesterday's short horizon is not reused.
+            key = (utc_string(origin), utc_string(midnight))
             if key != self._cache_key:
                 locations, readings = await get_prediction_history(utc_string(history_start), utc_string(origin))
                 if location_id is not None and not any(l["id"] == location_id for l in locations):
@@ -140,7 +148,7 @@ class PredictionService:
                 for i, value in enumerate(location["values"]):
                     bin_start = origin + timedelta(seconds=i * STEP_SECONDS)
                     bin_end = bin_start + timedelta(seconds=STEP_SECONDS)
-                    if bin_end <= served_at:
+                    if bin_end <= served_at or bin_start >= midnight:
                         continue
                     points.append({"recorded_at": utc_string(max(bin_start, served_at)), **value})
                 if points and points[-1]["recorded_at"] != utc_string(end):

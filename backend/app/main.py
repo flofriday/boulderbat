@@ -146,7 +146,8 @@ async def prediction(params: Annotated[PredictionQuery, Query()]):
     """Predict only the remainder of today, ending at 23:59:59 Europe/Vienna.
 
     Uses Timestral-5M with up to eight weeks of 15-minute history. No date or horizon
-    override is accepted. Model results refresh with each completed 15-minute bin.
+    override is accepted. Input bins and refresh boundaries are one minute past
+    each quarter-hour (:01, :16, :31, :46), allowing fresh quarter-hour readings.
     """
     try:
         return await prediction_service.predict(params.location_id)

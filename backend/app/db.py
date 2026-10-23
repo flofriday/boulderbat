@@ -1,6 +1,6 @@
 import os
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -96,10 +96,15 @@ async def get_live() -> list[dict]:
 
 
 async def get_history(
-    start: str,
-    end: str,
+    day: date,
     location_id: int | None = None,
 ) -> list[dict]:
+    """Read one local calendar day, including both daylight-saving transitions."""
+    midnight = datetime.combine(day, time.min, tzinfo=VIENNA_TIMEZONE)
+    start, end = [
+        boundary.astimezone(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+        for boundary in (midnight, midnight + timedelta(days=1))
+    ]
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
         if location_id is not None:

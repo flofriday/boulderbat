@@ -1,14 +1,15 @@
 import logging
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import date as CalendarDate
 from pathlib import Path
+import re
 from typing import Annotated, Literal
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.collector import collect_capacity
 from app.db import get_history, get_live, get_typical_week, init_db
@@ -48,6 +49,22 @@ class HistoryReading(BaseModel):
     title: str
     capacity: int
     recorded_at: str
+
+
+class HistoryQuery(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    date: CalendarDate = Field(
+        gt=CalendarDate.min, lt=CalendarDate.max,
+        description="Single calendar date in Europe/Vienna (YYYY-MM-DD)",
+    )
+    location_id: int | None = Field(None, description="Filter to a single location ID")
+
+    @field_validator("date", mode="before")
+    @classmethod
+    def require_date_only(cls, value):
+        if not isinstance(value, str) or not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", value):
+            raise ValueError("Use a calendar date in YYYY-MM-DD format, without a time")
+        return value
 
 
 class TypicalWeekReading(BaseModel):
@@ -103,18 +120,14 @@ async def live():
 
 @app.get("/history", response_model=list[HistoryReading])
 async def history(
-    start: datetime = Query(..., description="Range start (ISO 8601, e.g. 2026-04-28T00:00:00Z)"),
-    end: datetime = Query(..., description="Range end (ISO 8601)"),
-    location_id: int | None = Query(None, description="Filter to a single location ID"),
+    params: Annotated[HistoryQuery, Query()],
 ):
-    """All readings within a time range, optionally filtered by location."""
+    """Readings for one Europe/Vienna day, from midnight up to the next midnight.
 
-    def to_utc(dt: datetime) -> str:
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-        return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-    return await get_history(to_utc(start), to_utc(end), location_id)
+    Only a date is accepted; timestamps and range parameters are rejected.
+    Returned reading timestamps remain in UTC.
+    """
+    return await get_history(params.date, params.location_id)
 
 
 @app.get("/typical-week", response_model=TypicalWeekResponse)

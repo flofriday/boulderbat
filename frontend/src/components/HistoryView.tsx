@@ -132,15 +132,18 @@ export function HistoryView() {
 
   useEffect(() => {
     const controller = new AbortController()
-    const fmt = (d: Date) => d.toISOString().replace(".000", "")
-    const params = new URLSearchParams({ start: fmt(start), end: fmt(end) })
+    const params = new URLSearchParams({ date: selectedDay })
 
     function refreshHistory() {
       fetch(`/history?${params}`, { signal: controller.signal })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
       .then(d => {
         if (controller.signal.aborted) return
-        setReadings(d)
+        // The API returns the full local day; the chart displays 08:00–midnight.
+        setReadings((d as Reading[]).filter(reading => {
+          const timestamp = Date.parse(reading.recorded_at)
+          return timestamp >= start.getTime() && timestamp < end.getTime()
+        }))
         setError(null)
       })
       .catch(e => {
@@ -152,7 +155,7 @@ export function HistoryView() {
     const interval = isToday ? window.setInterval(refreshHistory, 60_000) : undefined
 
     return () => { controller.abort(); window.clearInterval(interval) }
-  }, [start, end, isToday])
+  }, [selectedDay, start, end, isToday])
 
   useEffect(() => {
     if (!isToday) return

@@ -58,10 +58,10 @@ To seed a local database with the public production history, run:
 
 ```bash
 cd backend
-uv run python -m app.import_production_history
+uv run python -m app.import_production_history --start 2026-05-17
 ```
 
-The importer downloads the complete archive from `https://boulderbat.flofriday.dev`, adds any missing readings to the local database, and is safe to run again. Use `--dry-run` to inspect the download without writing, or `--start 2026-06-01T00:00:00Z` and `--end 2026-06-02T00:00:00Z` to import a narrower UTC range.
+The importer downloads history from `https://boulderbat.flofriday.dev` one day at a time, adds any missing readings to the local database, and is safe to run again. `--start` is required so it does not issue years of empty daily requests. Both dates use `YYYY-MM-DD` in Europe/Vienna: `--start` is inclusive, and `--end` is exclusive (default: tomorrow, including today's readings so far). Use `--dry-run` to download without writing, or `--start 2026-06-01 --end 2026-06-02` to import just one day. Deploy the date-based history API before using this importer against production.
 
 ### Occupancy forecast benchmark
 
@@ -193,14 +193,14 @@ curl http://localhost:8000/live
 
 ### `GET /history`
 
-Returns all readings within a time range. Both `start` and `end` are required ISO 8601 timestamps. Add `location_id` to filter to a single location.
+Returns readings for exactly one calendar day in Europe/Vienna. `date` is required in `YYYY-MM-DD` format; timestamps, `start`/`end` ranges, and other query parameters are rejected with HTTP 422. Add `location_id` to filter to a single location. The range includes local midnight and excludes the following midnight, so daylight-saving days contain 23 or 25 hours. Reading timestamps remain in UTC. Days without readings return an empty list.
 
 ```bash
-# All locations, last 24 hours
-curl "http://localhost:8000/history?start=2026-04-27T00:00:00Z&end=2026-04-28T00:00:00Z"
+# All locations, one Vienna calendar day
+curl "http://localhost:8000/history?date=2026-04-27"
 
 # Single location
-curl "http://localhost:8000/history?start=2026-04-27T00:00:00Z&end=2026-04-28T00:00:00Z&location_id=260"
+curl "http://localhost:8000/history?date=2026-04-27&location_id=260"
 ```
 
 ### `GET /typical-week`

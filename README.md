@@ -148,14 +148,18 @@ and `p90` (the bounds of the central 80% prediction interval). Points are remain
 The first point is at the response time; the last repeats the final 15-minute
 estimate at 23:59:59, so no prediction timestamp falls on tomorrow.
 
-The model reads eight local weeks of history in 15-minute bins ending at the
-latest completed quarter-hour. Missing bins remain missing. Inference runs on CPU
+The model reads up to eight local weeks of history in 15-minute bins ending at the
+latest completed quarter-hour. Newer locations use all available history within
+that window, starting at their first observed bin. Internal gaps remain missing.
+Inference runs on CPU
 outside the async request loop. The model stays loaded and forecasts are cached
 until the next quarter-hour; requests share that computation. This current-time
 forecast differs from the notebook's fixed 08:00 evaluation cutoff.
 
-Locations with insufficient history or no valid reading within 30 minutes of
-the context cutoff have `status: "unavailable"`, an explanation, and no points.
+Locations with no valid reading in a completed 15-minute bin, or no valid reading
+within 30 minutes of the context cutoff, have `status: "unavailable"`, an
+explanation, and no points. There is no minimum number of weeks for app forecasts;
+the notebook retains its eight-week eligibility rule for the benchmark.
 Model-loading/inference failures return 503 without affecting recorded history.
 If a request crosses local midnight during inference, it returns 503 so a retry
 uses the new day. The History tab refreshes every minute and shows predictions

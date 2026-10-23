@@ -66,7 +66,7 @@ class PredictionTests(unittest.IsolatedAsyncioTestCase):
         await self.service.predict()
         self.assertEqual(self.model.call_count, 2)
 
-    async def test_insufficient_or_stale_history_is_explicit(self):
+    async def test_missing_or_stale_history_is_explicit(self):
         self.locations += [{"id": 1, "title": "New gym", "first_recorded_at": "2026-10-01T00:00:00Z"},
                            {"id": 2, "title": "Offline gym", "first_recorded_at": "2026-05-01T00:00:00Z"}]
         result = await self.service.predict()
@@ -74,6 +74,48 @@ class PredictionTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(unavailable), 2)
         self.assertTrue(all(l["points"] == [] and l["reason"] for l in unavailable))
         self.assertEqual(len(self.model.call_args.args[0]), 1)
+
+    async def test_new_location_uses_all_available_history_with_gaps_preserved(self):
+        first = self.origin - timedelta(days=10)
+        self.locations.append({"id": 1001, "title": "Blockfabrik", "first_recorded_at": utc_string(first)})
+        self.readings += [
+            {"location_id": 1001, "capacity": 10, "recorded_at": utc_string(first)},
+            {"location_id": 1001, "capacity": 20, "recorded_at": utc_string(first + timedelta(minutes=5))},
+            {"location_id": 1001, "capacity": 30, "recorded_at": utc_string(self.origin - timedelta(minutes=5))},
+            {"location_id": 1001, "capacity": 100, "recorded_at": utc_string(self.origin)},
+        ]
+        result = await self.service.predict(1001)
+        location = result["locations"][0]
+        self.assertEqual(location["status"], "ok")
+        self.assertIsNone(location["reason"])
+        self.assertTrue(location["points"])
+        contexts = self.model.call_args.args[0]
+        self.assertEqual(len(contexts), 2)
+        self.assertEqual(len(contexts[0]), int((self.origin - self.start).total_seconds() / 900))
+        self.assertEqual(len(contexts[1]), 10 * 96)
+        self.assertEqual(contexts[1][0], 15)
+        self.assertTrue(np.isnan(contexts[1][1:-1]).all())
+        self.assertEqual(contexts[1][-1], 30)
+        self.assertEqual(location["points"][-1]["recorded_at"], "2026-10-23T21:59:59Z")
+
+    async def test_one_completed_bin_is_enough_for_a_new_location(self):
+        self.locations.append({"id": 1001, "title": "New gym", "first_recorded_at": utc_string(self.origin - timedelta(minutes=5))})
+        self.readings.append({"location_id": 1001, "capacity": 12, "recorded_at": utc_string(self.origin - timedelta(minutes=5))})
+        result = await self.service.predict(1001)
+        self.assertEqual(result["locations"][0]["status"], "ok")
+        np.testing.assert_array_equal(self.model.call_args.args[0][1], [12])
+
+    async def test_only_incomplete_or_invalid_readings_do_not_run_the_model(self):
+        self.locations[:] = [{"id": 1001, "title": "New gym", "first_recorded_at": utc_string(self.origin)}]
+        self.readings[:] = [
+            {"location_id": 1001, "capacity": 20, "recorded_at": utc_string(self.origin)},
+            {"location_id": 1001, "capacity": float("nan"), "recorded_at": utc_string(self.origin - timedelta(minutes=5))},
+            {"location_id": 1001, "capacity": 101, "recorded_at": utc_string(self.origin - timedelta(minutes=5))},
+        ]
+        result = await self.service.predict(1001)
+        self.assertEqual(result["locations"][0]["status"], "unavailable")
+        self.assertIn("completed 15-minute", result["locations"][0]["reason"])
+        self.model.assert_not_called()
 
     async def test_unknown_location_does_not_run_model(self):
         with self.assertRaises(LookupError):

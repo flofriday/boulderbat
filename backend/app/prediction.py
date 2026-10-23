@@ -67,7 +67,7 @@ def forecast_contexts(contexts: list[np.ndarray], horizon: int) -> list[list[dic
 
 
 def build_contexts(locations, readings, origin, history_start):
-    """15-minute means on the UTC grid; missing bins remain NaN."""
+    """Use up to eight weeks of 15-minute means, starting at each gym's first bin."""
     bins = int((origin - history_start).total_seconds()) // STEP_SECONDS
     sums = {location["id"]: np.zeros(bins) for location in locations}
     counts = {location["id"]: np.zeros(bins, dtype=int) for location in locations}
@@ -84,14 +84,10 @@ def build_contexts(locations, readings, origin, history_start):
         latest[location_id] = max(latest.get(location_id, timestamp), timestamp)
     contexts, eligible, unavailable = [], [], []
     for location in locations:
-        first = location["first_recorded_at"]
-        first = datetime.fromisoformat(first.replace("Z", "+00:00")) if first else None
-        # Match the notebook's left-edge availability test.
-        first_bin = int(first.timestamp()) // STEP_SECONDS * STEP_SECONDS if first else None
         reason = None
-        if first_bin is None or first_bin > history_start.timestamp():
-            reason = "Eight weeks of history are needed for a prediction."
-        elif location["id"] not in latest or origin - latest[location["id"]] > timedelta(minutes=30):
+        if location["id"] not in latest:
+            reason = "No completed 15-minute readings are available yet."
+        elif origin - latest[location["id"]] > timedelta(minutes=30):
             reason = "Recent readings are unavailable."
         if reason:
             unavailable.append({"location_id": location["id"], "title": location["title"],
@@ -99,7 +95,10 @@ def build_contexts(locations, readings, origin, history_start):
             continue
         values = np.divide(sums[location["id"]], counts[location["id"]],
                            out=np.full(bins, np.nan), where=counts[location["id"]] > 0).astype(np.float32)
-        contexts.append(values)
+        # Newer gyms use their shorter history without artificial leading weeks.
+        # Keep internal/trailing missing bins so every series still ends at origin.
+        first_observed = np.flatnonzero(counts[location["id"]])[0]
+        contexts.append(values[first_observed:])
         eligible.append({"location_id": location["id"], "title": location["title"],
                          "status": "ok", "reason": None})
     return contexts, eligible, unavailable

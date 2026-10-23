@@ -145,7 +145,7 @@ async def typical_week(
 async def prediction(params: Annotated[PredictionQuery, Query()]):
     """Predict only the remainder of today, ending at 23:59:59 Europe/Vienna.
 
-    Uses Timestral-5M with eight weeks of 15-minute history. No date or horizon
+    Uses Timestral-5M with up to eight weeks of 15-minute history. No date or horizon
     override is accepted. Model results refresh with each completed 15-minute bin.
     """
     try:

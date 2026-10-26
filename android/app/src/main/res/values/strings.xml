@@ -1,0 +1,6 @@
+<resources>
+    <string name="widget_description">Recorded occupancy, today’s graph and forecast with an 80% range</string>
+    <string name="edit_gym">Edit gym</string>
+    <string name="gym_preview">Your gym</string>
+    <string name="widget_preview_value">34%</string>
+</resources>

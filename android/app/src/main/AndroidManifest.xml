@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <application android:name=".BoulderbatApplication" android:allowBackup="false"
+        android:icon="@drawable/ic_boulderbat" android:roundIcon="@drawable/ic_boulderbat"
+        android:label="Boulderbat" android:supportsRtl="true"
+        android:theme="@style/Theme.Boulderbat" android:usesCleartextTraffic="false">
+        <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="boulderbat" android:host="history" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".widget.WidgetConfigureActivity" android:exported="true"
+            android:label="Choose your gym">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" /></intent-filter>
+        </activity>
+        <receiver android:name=".widget.GymWidgetProvider" android:exported="false" android:label="Gym">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/gym_widget_info" />
+        </receiver>
+        <receiver android:name=".widget.WidgetPinnedReceiver" android:exported="false" />
+    </application>
+</manifest>

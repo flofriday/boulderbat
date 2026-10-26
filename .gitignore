@@ -17,3 +17,4 @@ data/
 
 # IDE
 .idea
+.DS_Store

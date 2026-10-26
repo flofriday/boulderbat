@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+    <!-- Emulator/localhost development only; release remains HTTPS-only. -->
+    <application android:networkSecurityConfig="@xml/debug_network_security" tools:replace="android:usesCleartextTraffic" android:usesCleartextTraffic="true" />
+</manifest>

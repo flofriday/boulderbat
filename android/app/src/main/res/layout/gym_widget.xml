@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:background="@android:color/transparent">
+    <ImageView android:id="@+id/widget_image" android:layout_width="match_parent" android:layout_height="match_parent"
+        android:scaleType="fitXY" android:contentDescription="@string/widget_description" />
+    <ImageButton android:id="@+id/widget_edit" android:layout_width="40dp" android:layout_height="40dp"
+        android:layout_gravity="bottom|end" android:padding="12dp" android:src="@android:drawable/ic_menu_edit"
+        android:tint="#AAB4BC" android:background="@android:color/transparent" android:contentDescription="@string/edit_gym" />
+</FrameLayout>

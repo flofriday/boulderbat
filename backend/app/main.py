@@ -22,17 +22,25 @@ logger = logging.getLogger(__name__)
 STATIC_DIR = Path(__file__).parent.parent.parent / "frontend" / "dist"
 
 
+async def collect_and_refresh() -> None:
+    await collect_capacity()
+    prediction_service.request_refresh()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     configure_access_logging()
     await init_db()
     await collect_capacity()
+    await prediction_service.start()
+    prediction_service.request_refresh()
 
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(collect_capacity, "interval", minutes=5, id="collect")
+    scheduler.add_job(collect_and_refresh, "interval", minutes=5, id="collect")
     scheduler.start()
     yield
     scheduler.shutdown()
+    await prediction_service.stop()
 
 
 app = FastAPI(title="Boulderbat Capacity API", lifespan=lifespan)
@@ -143,11 +151,11 @@ async def typical_week(
 
 @app.get("/prediction", response_model=PredictionResponse)
 async def prediction(params: Annotated[PredictionQuery, Query()]):
-    """Predict only the remainder of today, ending at 23:59:59 Europe/Vienna.
+    """Forecast the remainder of today, from the latest reading to 23:59:59 Europe/Vienna.
 
-    Uses Timestral-5M with up to eight weeks of 15-minute history. No date or horizon
-    override is accepted. Input bins and refresh boundaries are one minute past
-    each quarter-hour (:01, :16, :31, :46), allowing fresh quarter-hour readings.
+    Uses Timestral-5M with up to eight weeks of history at the collected 5-minute
+    rate. No date or horizon override is accepted. The response anchors the forecast
+    at the latest observed reading so it continues the recorded line without a seam.
     """
     try:
         return await prediction_service.predict(params.location_id)

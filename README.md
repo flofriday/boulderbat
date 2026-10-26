@@ -143,39 +143,46 @@ curl "http://localhost:8000/prediction?location_id=262"
 The response includes `date`, `timezone`, `model`, `generated_at`, `context_end`,
 `valid_until`, and `locations`. Each location has `location_id`, `title`, `status`,
 `reason`, and `points` containing `recorded_at`, `capacity` (the median), `p10`,
-and `p90` (the bounds of the central 80% prediction interval). Points are remaining
-15-minute occupancy estimates, bounded to 0–100% and rounded to one decimal place.
-The first point is at the response time; the last repeats the final 15-minute
-estimate at 23:59:59, so no prediction timestamp falls on tomorrow.
+and `p90` (the bounds of the central 80% prediction interval). Points are
+occupancy estimates at 5-minute steps, bounded to 0–100% and rounded to one
+decimal place. The first point repeats the latest recorded reading, so the
+forecast continues the observed line without a seam; the last point repeats the
+final estimate at 23:59:59, so no prediction timestamp falls on tomorrow.
 
-The model reads up to eight local weeks of history in 15-minute bins, with both
-input intervals and refresh boundaries shifted one minute past each quarter-hour:
-`:01`, `:16`, `:31`, and `:46`. For example, the last input bin at 15:16 covers
-15:01–15:16 and includes readings timestamped 15:15, provided they have been saved
-before inference reads the database. The cutoff is exclusive: readings at 15:16
-belong to the next bin. Before 15:16, requests reuse the forecast with a 15:01
-cutoff. There is no background regeneration; the first request after a boundary
-recomputes the forecast. Later arrivals wait until the next refresh.
+The model reads up to eight local weeks of history in 5-minute cells, with both
+input intervals and refresh boundaries shifted one minute past each five-minute
+mark (`:01`, `:06`, `:11`, …). For example, the last input cell at 15:06 covers
+15:01–15:06 and includes readings timestamped 15:05, provided they have been saved
+before inference reads the database. The cutoff is exclusive: readings at 15:06
+belong to the next cell. Timestral forecasts at the context's sampling rate and
+supports 32,768 context steps (eight weeks at 5-minute cells is 16,128), so the
+response serves the model's 5-minute estimates directly, one per cell, between
+the latest reading and 23:59:59.
+
+Each collection (every five minutes) enqueues a background refresh. The worker
+recomputes the model when a cell boundary has passed; the endpoint always serves
+the cached forecast, so inference never runs on the request path.
 
 Newer locations use all available history within that window, starting at their
-first observed bin. Internal gaps remain missing. Inference runs on CPU outside
-the async request loop. The model stays loaded and requests share cached
-computation. The cache also resets at local midnight so the new day's full
-horizon is available during 00:00–00:01. The final forecast interval is clipped
-at 23:59:59; API points never extend into tomorrow. This current-time forecast
-differs from the notebook's fixed 08:00 evaluation cutoff and unshifted bins.
+first observed cell. Internal gaps remain missing. Inference runs on CPU outside
+the async request loop, in a background worker started at boot. The model stays
+loaded and requests share the cached computation. A cache older than 25 minutes,
+or one from the previous local day, is not served; the endpoint returns 503 and
+nudges the worker so a retry gets a fresh forecast. The final forecast interval
+is clipped at 23:59:59; API points never extend into tomorrow. This
+current-time forecast differs from the notebook's fixed 08:00 evaluation cutoff
+and unshifted bins.
 
-Locations with no valid reading in a completed 15-minute bin, or no valid reading
+Locations with no valid reading in a completed 5-minute cell, or no valid reading
 within 30 minutes of the context cutoff, have `status: "unavailable"`, an
 explanation, and no points. There is no minimum number of weeks for app forecasts;
 the notebook retains its eight-week eligibility rule for the benchmark.
-Model-loading/inference failures return 503 without affecting recorded history.
-If a request crosses local midnight during inference, it returns 503 so a retry
-uses the new day. The History tab refreshes every minute and shows predictions
-only for today, as dashed continuations in the gym's color. Recorded lines stay
-solid; a “Now” marker aligns with the latest selected forecastable gym sample.
-A dashed connector joins each recent sample to its first prediction without
-extending the recorded line or changing model uncertainty bounds. Gaps longer
+Model-loading/inference failures return 503 without affecting recorded history,
+and a failed refresh keeps the last good cache. The History tab refreshes every
+minute and shows predictions only for today, as dashed continuations in the gym's
+color. Recorded lines stay solid; a “Now” marker aligns with the latest selected
+forecastable gym sample. The dashed prediction starts at the latest sample, so
+the recorded and predicted lines meet without a connector. Gaps longer
 than 15 minutes remain visible. Light bands in each gym's
 color show the 80% prediction interval, with exact bounds available in the tooltip.
 

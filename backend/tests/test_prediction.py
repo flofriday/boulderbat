@@ -35,55 +35,92 @@ class PredictionTests(unittest.IsolatedAsyncioTestCase):
         self.clock = patch("app.prediction.current_time", return_value=self.now).start()
         self.history = patch("app.prediction.get_prediction_history", new_callable=AsyncMock,
                              return_value=(self.locations, self.readings)).start()
+        self.live = patch("app.prediction.get_live", new_callable=AsyncMock,
+                          return_value=[{"id": 262, "title": "Hannovergasse", "url": "https://example.com",
+                                         "capacity": 20, "recorded_at": utc_string(self.origin - timedelta(minutes=5))}]).start()
         self.model = patch("app.prediction.forecast_contexts", side_effect=lambda contexts, horizon:
                            [[{"capacity": float(i), "p10": max(0., i - 2.), "p90": i + 2.}
                              for i in range(horizon)] for _ in contexts]).start()
         self.addCleanup(patch.stopall)
 
-    async def test_only_remaining_today_and_exact_last_second(self):
+    async def test_forecast_anchors_at_latest_reading_and_ends_at_last_second(self):
+        await self.service.refresh()
         result = await self.service.predict()
         self.assertEqual(result["date"], "2026-10-23")
         self.assertEqual(result["model"], "Timestral-5M")
         points = result["locations"][0]["points"]
-        self.assertEqual(points[0]["recorded_at"], utc_string(self.now))
+        anchor = self.origin - timedelta(minutes=5)
+        self.assertEqual(points[0], {"recorded_at": utc_string(anchor),
+                                     "capacity": 20., "p10": 20., "p90": 20.})
+        self.assertEqual(points[1]["recorded_at"], utc_string(self.origin))
+        self.assertEqual(points[1]["capacity"], 0.)
+        self.assertEqual(points[2]["recorded_at"], utc_string(self.origin + timedelta(minutes=5)))
+        self.assertEqual(points[2]["capacity"], 1.)
+        self.assertEqual(points[-2]["recorded_at"], utc_string(self.origin + timedelta(minutes=5 * 112)))
+        self.assertEqual(points[-2]["capacity"], 112.)
         self.assertEqual(points[-1]["recorded_at"], "2026-10-23T21:59:59Z")
-        self.assertEqual(points[-1] | {"recorded_at": points[-2]["recorded_at"]}, points[-2])
+        self.assertEqual(points[-1]["capacity"], 112.)
+        self.assertEqual(len(points), 115)
         for point in points:
             self.assertLessEqual(point["p10"], point["capacity"])
             self.assertGreaterEqual(point["p90"], point["capacity"])
             timestamp = datetime.fromisoformat(point["recorded_at"].replace("Z", "+00:00"))
             self.assertEqual(timestamp.astimezone(VIENNA).date(), self.now.astimezone(VIENNA).date())
-            self.assertGreaterEqual(timestamp, self.now)
+        timestamps = [point["recorded_at"] for point in points]
+        self.assertEqual(timestamps, sorted(timestamps))
+        self.assertEqual(len(set(timestamps)), len(timestamps))
         self.history.assert_awaited_once_with(utc_string(self.start), utc_string(self.origin))
-        self.assertEqual(self.model.call_args.args[1], 38)
+        self.assertEqual(self.model.call_args.args[1], 113)
+
+    async def test_reading_newer_than_first_cell_drops_realized_model_points(self):
+        await self.service.refresh()
+        newer = local("2026-10-23T14:50:00")
+        self.live.return_value = [{"id": 262, "title": "Hannovergasse", "url": "https://example.com",
+                                   "capacity": 42, "recorded_at": utc_string(newer)}]
+        result = await self.service.predict()
+        points = result["locations"][0]["points"]
+        self.assertEqual(points[0], {"recorded_at": utc_string(newer),
+                                     "capacity": 42., "p10": 42., "p90": 42.})
+        self.assertEqual(points[1]["recorded_at"], utc_string(self.origin + timedelta(minutes=15)))
+        self.assertEqual(points[1]["capacity"], 3.)
+
+    async def test_missing_latest_reading_starts_at_first_model_point(self):
+        await self.service.refresh()
+        self.live.return_value = []
+        result = await self.service.predict()
+        points = result["locations"][0]["points"]
+        self.assertEqual(points[0]["recorded_at"], utc_string(self.origin))
+        self.assertEqual(points[0]["capacity"], 0.)
 
     async def test_cache_and_concurrent_requests(self):
+        await self.service.refresh()
         responses = await asyncio.gather(*(self.service.predict(262) for _ in range(4)))
         self.assertEqual(len(responses), 4)
+        self.assertEqual(len({str(response) for response in responses}), 1)
         self.history.assert_awaited_once()
         self.model.assert_called_once()
         self.clock.return_value = self.now + timedelta(minutes=10)
-        await self.service.predict()
+        await self.service.refresh()
         self.assertEqual(self.model.call_count, 2)
+        await self.service.predict()
 
-    async def test_refreshes_at_one_minute_past_each_quarter_hour(self):
+    async def test_refreshes_at_one_minute_past_each_five_minute_cell(self):
         # A fresh reading exists in every interval. Readings ahead of the active
         # cutoff must still be excluded by build_contexts.
         self.readings += [{"location_id": 262, "capacity": 30,
                            "recorded_at": utc_string(local(f"2026-10-23T15:{minute:02}:00"))}
                           for minute in (0, 15, 30, 45)]
         for time, cutoff, calls in [
-            ("15:00:59", "14:46:00", 1),
+            ("15:00:59", "14:56:00", 1),
             ("15:01:00", "15:01:00", 2),
-            ("15:15:59", "15:01:00", 2),
-            ("15:16:00", "15:16:00", 3),
-            ("15:30:59", "15:16:00", 3),
-            ("15:31:00", "15:31:00", 4),
-            ("15:45:59", "15:31:00", 4),
-            ("15:46:00", "15:46:00", 5),
+            ("15:05:59", "15:01:00", 2),
+            ("15:06:00", "15:06:00", 3),
+            ("15:10:59", "15:06:00", 3),
+            ("15:11:00", "15:11:00", 4),
         ]:
             with self.subTest(time=time):
                 self.clock.return_value = local("2026-10-23T" + time)
+                await self.service.refresh()
                 result = await self.service.predict()
                 self.assertEqual(result["context_end"], utc_string(local("2026-10-23T" + cutoff)))
                 self.assertEqual(self.model.call_count, calls)
@@ -92,6 +129,7 @@ class PredictionTests(unittest.IsolatedAsyncioTestCase):
     async def test_missing_or_stale_history_is_explicit(self):
         self.locations += [{"id": 1, "title": "New gym", "first_recorded_at": "2026-10-01T00:00:00Z"},
                            {"id": 2, "title": "Offline gym", "first_recorded_at": "2026-05-01T00:00:00Z"}]
+        await self.service.refresh()
         result = await self.service.predict()
         unavailable = [l for l in result["locations"] if l["status"] == "unavailable"]
         self.assertEqual(len(unavailable), 2)
@@ -107,6 +145,10 @@ class PredictionTests(unittest.IsolatedAsyncioTestCase):
             {"location_id": 1001, "capacity": 30, "recorded_at": utc_string(self.origin - timedelta(minutes=5))},
             {"location_id": 1001, "capacity": 100, "recorded_at": utc_string(self.origin)},
         ]
+        self.live.return_value = self.live.return_value + [
+            {"id": 1001, "title": "Blockfabrik", "url": "https://example.com",
+             "capacity": 30, "recorded_at": utc_string(self.origin - timedelta(minutes=5))}]
+        await self.service.refresh()
         result = await self.service.predict(1001)
         location = result["locations"][0]
         self.assertEqual(location["status"], "ok")
@@ -114,16 +156,21 @@ class PredictionTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(location["points"])
         contexts = self.model.call_args.args[0]
         self.assertEqual(len(contexts), 2)
-        self.assertEqual(len(contexts[0]), int((self.origin - self.start).total_seconds() / 900))
-        self.assertEqual(len(contexts[1]), 10 * 96)
-        self.assertEqual(contexts[1][0], 15)
-        self.assertTrue(np.isnan(contexts[1][1:-1]).all())
+        self.assertEqual(len(contexts[0]), int((self.origin - self.start).total_seconds() / 300))
+        self.assertEqual(len(contexts[1]), 10 * 288)
+        self.assertEqual(contexts[1][0], 10)
+        self.assertEqual(contexts[1][1], 20)
+        self.assertTrue(np.isnan(contexts[1][2:-1]).all())
         self.assertEqual(contexts[1][-1], 30)
         self.assertEqual(location["points"][-1]["recorded_at"], "2026-10-23T21:59:59Z")
 
-    async def test_one_completed_bin_is_enough_for_a_new_location(self):
+    async def test_one_completed_cell_is_enough_for_a_new_location(self):
         self.locations.append({"id": 1001, "title": "New gym", "first_recorded_at": utc_string(self.origin - timedelta(minutes=5))})
         self.readings.append({"location_id": 1001, "capacity": 12, "recorded_at": utc_string(self.origin - timedelta(minutes=5))})
+        self.live.return_value = self.live.return_value + [
+            {"id": 1001, "title": "New gym", "url": "https://example.com",
+             "capacity": 12, "recorded_at": utc_string(self.origin - timedelta(minutes=5))}]
+        await self.service.refresh()
         result = await self.service.predict(1001)
         self.assertEqual(result["locations"][0]["status"], "ok")
         np.testing.assert_array_equal(self.model.call_args.args[0][1], [12])
@@ -135,29 +182,41 @@ class PredictionTests(unittest.IsolatedAsyncioTestCase):
             {"location_id": 1001, "capacity": float("nan"), "recorded_at": utc_string(self.origin - timedelta(minutes=5))},
             {"location_id": 1001, "capacity": 101, "recorded_at": utc_string(self.origin - timedelta(minutes=5))},
         ]
+        await self.service.refresh()
         result = await self.service.predict(1001)
         self.assertEqual(result["locations"][0]["status"], "unavailable")
-        self.assertIn("completed 15-minute", result["locations"][0]["reason"])
+        self.assertIn("completed 5-minute", result["locations"][0]["reason"])
         self.model.assert_not_called()
 
     async def test_unknown_location_does_not_run_model(self):
+        await self.service.refresh()
         with self.assertRaises(LookupError):
             await self.service.predict(999)
-        self.model.assert_not_called()
+        self.model.assert_called_once()
 
     async def test_last_second_never_adds_tomorrow(self):
         self.clock.return_value = local("2026-10-23T23:59:59")
         self.readings.append({"location_id": 262, "capacity": 5,
                               "recorded_at": utc_string(local("2026-10-23T23:40:00"))})
+        self.live.return_value = [{"id": 262, "title": "Hannovergasse", "url": "https://example.com",
+                                   "capacity": 5, "recorded_at": utc_string(local("2026-10-23T23:40:00"))}]
+        await self.service.refresh()
         result = await self.service.predict()
-        self.assertEqual(result["locations"][0]["points"], [{"recorded_at": result["valid_until"], "capacity": 0., "p10": 0., "p90": 2.}])
+        self.assertEqual(result["locations"][0]["points"], [
+            {"recorded_at": utc_string(local("2026-10-23T23:40:00")), "capacity": 5., "p10": 5., "p90": 5.},
+            {"recorded_at": utc_string(local("2026-10-23T23:56:00")), "capacity": 0., "p10": 0., "p90": 2.},
+            {"recorded_at": result["valid_until"], "capacity": 0., "p10": 0., "p90": 2.},
+        ])
         self.assertEqual(self.model.call_args.args[1], 1)
 
     async def test_midnight_invalidates_cache(self):
-        await self.service.predict()
+        await self.service.refresh()
         self.clock.return_value = local("2026-10-24T00:01:00")
         self.readings.append({"location_id": 262, "capacity": 1,
                               "recorded_at": utc_string(local("2026-10-23T23:55:00"))})
+        self.live.return_value = [{"id": 262, "title": "Hannovergasse", "url": "https://example.com",
+                                   "capacity": 1, "recorded_at": utc_string(local("2026-10-23T23:55:00"))}]
+        await self.service.refresh()
         result = await self.service.predict()
         self.assertEqual(result["date"], "2026-10-24")
         self.assertEqual(self.model.call_count, 2)
@@ -165,24 +224,80 @@ class PredictionTests(unittest.IsolatedAsyncioTestCase):
     async def test_midnight_extends_horizon_even_before_first_shifted_refresh(self):
         self.readings.append({"location_id": 262, "capacity": 5,
                               "recorded_at": utc_string(local("2026-10-23T23:45:00"))})
+        self.live.return_value = [{"id": 262, "title": "Hannovergasse", "url": "https://example.com",
+                                   "capacity": 5, "recorded_at": utc_string(local("2026-10-23T23:45:00"))}]
         self.clock.return_value = local("2026-10-23T23:59:59")
+        await self.service.refresh()
         before = await self.service.predict()
         self.assertEqual(self.model.call_args.args[1], 1)
         self.clock.return_value = local("2026-10-24T00:00:00")
+        await self.service.refresh()
         after = await self.service.predict()
         self.assertEqual(before["context_end"], after["context_end"])
         self.assertEqual(self.model.call_count, 2)
-        self.assertEqual(self.model.call_args.args[1], 97)
+        self.assertEqual(self.model.call_args.args[1], 289)
         self.assertEqual(after["date"], "2026-10-24")
-        self.assertEqual(after["locations"][0]["points"][0]["recorded_at"], utc_string(self.clock.return_value))
+        self.assertEqual(after["locations"][0]["points"][0]["recorded_at"],
+                         utc_string(local("2026-10-23T23:45:00")))
         self.assertEqual(after["locations"][0]["points"][-1]["recorded_at"], "2026-10-24T21:59:59Z")
 
-    async def test_midnight_during_inference_does_not_serve_yesterday(self):
-        self.clock.side_effect = [local("2026-10-23T23:59:59"), local("2026-10-24T00:00:01")]
-        with self.assertRaisesRegex(RuntimeError, "day changed"):
+    async def test_yesterdays_cache_is_not_served_after_midnight(self):
+        await self.service.refresh()
+        self.clock.return_value = local("2026-10-24T00:00:01")
+        with self.assertRaisesRegex(RuntimeError, "No fresh prediction"):
             await self.service.predict()
+        self.assertEqual(self.service._queue.qsize(), 1)
 
-    def test_context_missing_bins_and_cutoff(self):
+    async def test_predict_before_first_refresh_is_unavailable(self):
+        with self.assertRaisesRegex(RuntimeError, "not ready"):
+            await self.service.predict()
+        self.assertEqual(self.service._queue.qsize(), 1)
+
+    async def test_cache_older_than_max_age_is_rejected(self):
+        await self.service.refresh()
+        self.clock.return_value = self.now + PredictionService.MAX_CACHE_AGE + timedelta(minutes=1)
+        with self.assertRaisesRegex(RuntimeError, "No fresh prediction"):
+            await self.service.predict()
+        self.assertEqual(self.service._queue.qsize(), 1)
+
+    async def test_request_refresh_coalesces_pending_refreshes(self):
+        self.service.request_refresh()
+        self.service.request_refresh()
+        self.assertEqual(self.service._queue.qsize(), 1)
+
+    async def test_worker_computes_cache_from_queue(self):
+        with patch("app.prediction.load_forecaster") as load:
+            await self.service.start()
+            try:
+                self.service.request_refresh()
+                await asyncio.wait_for(self.service._queue.join(), timeout=5)
+                result = await self.service.predict()
+                self.assertEqual(result["date"], "2026-10-23")
+                self.assertEqual(result["generated_at"], utc_string(self.now))
+                self.model.assert_called_once()
+                load.assert_called_once()
+            finally:
+                await self.service.stop()
+
+    async def test_worker_keeps_last_good_cache_when_refresh_fails(self):
+        with patch("app.prediction.load_forecaster"):
+            await self.service.start()
+            try:
+                self.service.request_refresh()
+                await asyncio.wait_for(self.service._queue.join(), timeout=5)
+                self.model.assert_called_once()
+                self.model.side_effect = ValueError("boom")
+                self.clock.return_value = self.now + timedelta(minutes=15)
+                with self.assertLogs("app.prediction", level="ERROR"):
+                    self.service.request_refresh()
+                    await asyncio.wait_for(self.service._queue.join(), timeout=5)
+                self.assertEqual(self.model.call_count, 2)
+                result = await self.service.predict()
+                self.assertEqual(result["generated_at"], utc_string(self.now))
+            finally:
+                await self.service.stop()
+
+    def test_context_missing_cells_and_cutoff(self):
         self.readings += [
             {"location_id": 262, "capacity": 100, "recorded_at": utc_string(self.origin)},
             {"location_id": 262, "capacity": 99, "recorded_at": utc_string(self.origin + timedelta(minutes=5))},
@@ -193,34 +308,35 @@ class PredictionTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(contexts[0][-1], 20)
         self.assertEqual(np.isfinite(contexts[0]).sum(), 2)
 
-    def test_shifted_input_bin_includes_quarter_hour_sample_and_excludes_cutoff(self):
+    def test_shifted_input_cell_includes_boundary_sample_and_excludes_cutoff(self):
         origin, start, _, _ = day_bounds(local("2026-10-23T15:16:00"))
         self.assertEqual(origin, local("2026-10-23T15:16:00"))
         readings = [{"location_id": 262, "capacity": value,
                      "recorded_at": utc_string(local("2026-10-23T" + time))}
-                    for time, value in [("15:00:00", 90), ("15:01:00", 10),
-                                        ("15:05:00", 20), ("15:15:00", 30),
-                                        ("15:15:59", 40), ("15:16:00", 100), ("15:16:01", 100)]]
+                    for time, value in [("15:00:00", 90), ("15:00:59", 91),
+                                        ("15:01:00", 10), ("15:05:59", 20),
+                                        ("15:06:00", 30), ("15:15:59", 40),
+                                        ("15:16:00", 100), ("15:16:01", 100)]]
         contexts, eligible, unavailable = build_contexts(self.locations, readings, origin, start)
         self.assertEqual(len(eligible), 1)
         self.assertFalse(unavailable)
-        np.testing.assert_array_equal(contexts[0], [90, 25])
+        np.testing.assert_array_equal(contexts[0], [90.5, 15, 30, 40])
 
     def test_dst_day_and_history_lengths(self):
-        for day, history_bins in [("2026-03-29", 5372), ("2026-10-25", 5380)]:
+        for day, history_bins in [("2026-03-29", 16116), ("2026-10-25", 16140)]:
             origin, start, midnight, horizon = day_bounds(local(day + "T08:01:00"))
-            self.assertEqual((origin - start).total_seconds() / 900, history_bins)
-            self.assertEqual(horizon, 64)
+            self.assertEqual((origin - start).total_seconds() / 300, history_bins)
+            self.assertEqual(horizon, 192)
             self.assertEqual(midnight.astimezone(VIENNA).hour, 0)
             self.assertEqual(str((midnight - timedelta(seconds=1)).astimezone(VIENNA).date()), day)
 
     async def test_shifted_forecasts_cover_final_interval_on_normal_and_dst_days(self):
         for day, time, expected_horizon in [
-            ("2026-10-23", "23:45:59", 2),
-            ("2026-10-23", "23:46:00", 1),
+            ("2026-10-23", "23:45:59", 4),
+            ("2026-10-23", "23:46:00", 3),
             ("2026-10-23", "23:59:59", 1),
-            ("2026-03-29", "00:00:30", 93),
-            ("2026-10-25", "00:00:30", 101),
+            ("2026-03-29", "00:00:30", 277),
+            ("2026-10-25", "00:00:30", 301),
         ]:
             with self.subTest(day=day, time=time):
                 now = local(day + "T" + time)
@@ -228,18 +344,25 @@ class PredictionTests(unittest.IsolatedAsyncioTestCase):
                 self.clock.return_value = now
                 self.readings[:] = [{"location_id": 262, "capacity": 10,
                                      "recorded_at": utc_string(origin - timedelta(minutes=1))}]
-                result = await PredictionService().predict()
+                self.live.return_value = [{"id": 262, "title": "Hannovergasse", "url": "https://example.com",
+                                           "capacity": 10, "recorded_at": utc_string(origin - timedelta(minutes=1))}]
+                service = PredictionService()
+                await service.refresh()
+                result = await service.predict()
                 self.assertEqual(self.model.call_args.args[1], expected_horizon)
                 points = result["locations"][0]["points"]
-                self.assertEqual(points[0]["recorded_at"], utc_string(now))
+                self.assertEqual(points[0], {"recorded_at": utc_string(origin - timedelta(minutes=1)),
+                                             "capacity": 10., "p10": 10., "p90": 10.})
+                self.assertEqual(points[1]["recorded_at"], utc_string(origin))
+                self.assertEqual(points[1]["capacity"], 0.)
+                self.assertEqual(points[-2]["recorded_at"], utc_string(origin + timedelta(minutes=5 * (expected_horizon - 1))))
+                self.assertEqual(points[-2]["capacity"], expected_horizon - 1)
                 self.assertEqual(points[-1]["recorded_at"], result["valid_until"])
-                if len(points) > 1:
-                    self.assertEqual(points[-2]["capacity"], expected_horizon - 1)
                 self.assertEqual(points[-1]["capacity"], expected_horizon - 1)
-                for point in points:
+                for point in points[1:]:
                     timestamp = datetime.fromisoformat(point["recorded_at"].replace("Z", "+00:00"))
-                    self.assertGreaterEqual(timestamp, now)
-                    self.assertEqual(str(timestamp.astimezone(VIENNA).date()), day)
+                    self.assertLessEqual(timestamp, datetime.fromisoformat(result["valid_until"].replace("Z", "+00:00")))
+                    self.assertLessEqual(timestamp.astimezone(VIENNA).date(), datetime.fromisoformat(day).date())
 
 
 class APITests(unittest.TestCase):

@@ -87,7 +87,7 @@ The notebook has an isolated, locked environment; it adds no app dependencies:
 
 ```bash
 cd notebooks
-uv sync --frozen --python 3.12
+uv sync --frozen --python 3.15
 uv run jupyter lab forecast_benchmark.ipynb
 ```
 
